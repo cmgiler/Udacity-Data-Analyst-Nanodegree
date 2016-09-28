@@ -16,9 +16,10 @@
 
 ```{r echo=FALSE, include=FALSE, Load_the_Data}
 # Load the Data
-setwd("/Volumes/NEW\ VOLUME") # For Mac OSX
+#setwd("/Volumes/NEW\ VOLUME") # For Mac OSX
 # setwd("F:/")                # For Windows
-setwd("Udacity\ Training/EDA_Course_Materials")
+setwd("/Users/chrisgiler_developer/version-control/Udacity-Data-Analyst-Nanodegree/Explore\ and\ Summarize\ Data")
+# setwd("Udacity\ Training/EDA_Course_Materials")
 getwd()
 
 # list.files()
