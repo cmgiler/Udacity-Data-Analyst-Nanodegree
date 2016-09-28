@@ -1,8 +1,8 @@
-Welcome to my Udacity Portfolio!
+# Welcome to my Udacity Portfolio!
 
-Links to my projects:
+## Links to my projects:
  - P1. Test a Perceptual Phenomenon
- 	Udacity-Data-Analyst-Nanodegree/1. Test a Perceptual Phenomenon
+ 
  - P2. Investigate a Dataset
 
  - P3. Wrangle OpenStreetMap Data
