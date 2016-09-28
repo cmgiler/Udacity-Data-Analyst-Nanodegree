@@ -1,0 +1,635 @@
+# White Wine Quality Exploration 
+### Christopher Giler
+### September 25, 2016
+
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+
+```
+
+```{r echo=FALSE, include=FALSE, Load_the_Data}
+# Load the Data
+setwd("/Volumes/NEW\ VOLUME") # For Mac OSX
+# setwd("F:/")                # For Windows
+setwd("Udacity\ Training/EDA_Course_Materials")
+getwd()
+
+# list.files()
+df <- read.csv('wineQualitywhites.csv', sep = ',')
+
+
+names(df)
+
+# Load necessary libraries
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(alr3)
+library(reshape2)
+library(GGally)
+library(scales)
+library(memisc)
+library(RColorBrewer)
+library(bitops)
+library(RCurl)
+library(psych)
+library(knitr)
+```
+
+This report explores a dataset which quantifies the chemical properties and quality ratings of 4,898 white wines. The goal of this exploratory data analysis is to determine which of these properties has the most influence on white wine quality.
+
+# Univariate Plots Section
+
+### Data Properties
+```{r echo=FALSE}
+dim(df)
+str(df)
+summary(df)
+```
+
+This dataset includes 12 variables for 4,898 observations.
+
+* 11 numeric variables for chemical properties of wine
+
+* 1 integer variable for wine quality rating
+
+### Alcohol Content
+```{r echo=FALSE}
+p1 <- qplot(x = alcohol, data = df, binwidth = 0.1)
+p2 <- qplot(x = alcohol, data = df, binwidth = 0.01) + scale_x_log10(breaks=8:14)
+grid.arrange(p1, p2, ncol=1)
+summary(df$alcohol)
+describe(df$alcohol)
+```
+
+The data on alcohol content seems to be positively skewed, with half of the white wines below 10.4% ABV, but with a long range beyond this to a maximum alcohol content of 14.2%. This behavior is verified with a logarithmic transform on alcohol content also showing a slightly skewed distribution.
+
+### Residual Sugar
+```{r echo=FALSE}
+p1 <- qplot(x = residual.sugar, data = df, binwidth = 0.1)
+p2 <- qplot(x = residual.sugar, data = df, binwidth = 0.05) + scale_x_log10(breaks=c(1,1.2,2,5,8,10,20,25,30))
+grid.arrange(p1, p2, ncol=1)
+summary(df$residual.sugar)
+describe(df$residual.sugar)
+```
+
+The data for residual sugar has a definite bimodal distribution, with peaks around 1.2 and again around 8. There also appear to be some outliers in the dataset with residual sugar measurements well out of the typical range (>20 g/dm^3). Future analyses of residual sugar data in this report will remove the top 0.1% of these values to provide more meaningful plots and distribution fitting.
+
+### pH
+```{r echo=FALSE}
+qplot(x = pH, data = df, binwidth = .01) + scale_x_continuous(breaks=c(2.8,3,3.2,3.4,3.6,3.8,4))
+summary(df$pH)
+describe(df$pH)
+```
+
+The pH data appears to have a normal distribution, with a mean pH level of 3.188 and standard deviation of 0.15. We can approximate that 95% of the data contains a pH level between 2.9 and 3.5.
+
+### Quality
+```{r echo=FALSE}
+qplot(x = quality, data = df, binwidth = 1, color = I("White")) + scale_x_continuous(breaks=3:9)
+summary(df$quality)
+describe(df$quality)
+```
+
+Quality also appears to have a normal distribution with the mean and median quality for the dataset of approximately 6. While the rating scale ranges from 0 (worst) to 10 (best), the range for this dataset is between 3 and 9. Even still, there are very few wines in this set that were given these minimum and maximum ranges, with a vast majority of the wines receiving an average rating between 5 and 7.
+
+### Other Plots
+#### Approximately Normal Distributions
+
+```{r echo=FALSE}
+p1 <- qplot(x = fixed.acidity, data = df, binwidth = .2)
+p2 <- qplot(x = citric.acid, data = df, binwidth = .025)
+p3 <- qplot(x = total.sulfur.dioxide, data = df, binwidth = 10)
+grid.arrange(p1, p2, p3, ncol=1)
+summary(subset(df, select = c(fixed.acidity, citric.acid, total.sulfur.dioxide)))
+```
+
+Fixed acidity, citric acid, and total sulfur dioxide appear to be normally distributed for this dataset. Looking at the minimum values of each, there seems to be a few wines with a citric acid measurement of 0 g/dm^3. To quantify these cases, I calculated a new variable 'citric.acid.zero' 
+Citric Acid shows a minimum of 0...is this possible? Looking at the cases in which citric acid is equal to zero:
+
+```{r echo=FALSE}
+citric.acid.zero <- ifelse(df$citric.acid == 0.0000, TRUE, FALSE)
+table(citric.acid.zero)
+subset(df, citric.acid <= 0, select=c(residual.sugar, pH, alcohol, quality))
+```
+
+And calculating the ratio of citric acid = 0:
+
+```{r}
+sum(citric.acid.zero == 1)/length(citric.acid.zero)
+```
+
+Citric acid is used to add "freshness" to wine, according to information from the dataset's source, so it does make sense that wines that do not contain citric acid receive mediocre to average wine ratings (between 4 and 6)
+
+```{r echo=FALSE}
+qplot(x = free.sulfur.dioxide, data = df, binwidth = 1)
+```
+
+Interestingly, measurements for free sulfur dioxide are somewhat skewed right. To compare free sulfur dioxide with total sulfur dioxide, I created a new variable called "percent.free.sulfur.dioxide", defined as follows:
+
+```{r}
+df$percent.free.sulfur.dioxide = df$free.sulfur.dioxide/df$total.sulfur.dioxide
+```
+```{r echo=FALSE}
+qplot(x = percent.free.sulfur.dioxide, data = df, binwidth = 0.01)
+```
+
+Percent free sulfur dioxide is a normal distribution with a bit of a tail on the right. How free sulfur dioxide is added to the wine to adjust pH levels will be discussed later in this report.
+
+```{r echo=FALSE}
+qplot(x = density, data = df, binwidth = .0005)
+summary(df$density)
+describe(df$density)
+```
+
+Density appears skewed to the right due to outliers. To correct this, I removed top 0.1% of data to plot only the 99.9th percentile.
+
+```{r echo=FALSE}
+qplot(x = density, data = subset(df, density <= quantile(density, 0.999)), binwidth = .0005)
+summary(subset(df, density <= quantile(density, 0.999))$density)
+```
+
+The data still appears slightly skewed to the right, with a median density of 0.9937 and a mean of 0.9940. The range of density is between 0.9871 to 1.002.
+
+#### Skewed Distributions
+```{r echo=FALSE}
+p1 <- qplot(x = volatile.acidity, data = df, binwidth = 0.02)
+p2 <- qplot(x = chlorides, data = df, binwidth = 0.002)
+p3 <- qplot(x = sulphates, data = df, binwidth = 0.02)
+grid.arrange(p1, p2, p3, ncol=1)
+summary(subset(df, select = c(volatile.acidity, chlorides, sulphates)))
+```
+
+The distributions of volatile acidity, chlorides, and sulphates are positively skewed. It's interesting to note that the chlorides appear to have a normal distribution between 0 and 0.1 g/dm^3, but with such a high count of data points with chlorides above this range, it is difficult to rule these out as outliers in the dataset. 
+
+### Separating Low and High Quality Wines
+For this study, I considered low-quality ratings to be <=4 and high-quality >=8
+```{r echo=FALSE, warning=FALSE}
+p2 <- qplot(x = alcohol, data = subset(df, quality>=8), binwidth = .01, fill = I('Blue')) +
+  scale_x_log10(limits = c(min(df$alcohol), max(df$alcohol)), breaks=c(8,9,10,11,12,13,14)) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Alcohol Content of High Quality Wine (Quality >= 8)')
+p1 <- qplot(x = alcohol, data = subset(df, quality<=4), binwidth = .01, fill = I('indianred3')) +
+  scale_x_log10(limits = c(min(df$alcohol),max(df$alcohol)), breaks=c(8,9,10,11,12,13,14)) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Alcohol Content of Low Quality Wine (Quality <= 4)')
+grid.arrange(p1, p2, ncol = 1)
+```
+
+This separation of high and low-quality wine gives some interesting insight into the data. It appears that while the majority of low-quality wines have an alcohol content around 10%, most high-quality wine has an alcohol concentration much higher on the scale (above 12%). Alcohol already appears to have some influence on wine quality ratings, and will be explored as a primary factor later in the report.
+
+```{r echo=FALSE}
+p2 <- qplot(x = residual.sugar, data = subset(df, quality>=8), binwidth = .05, fill = I('Blue')) +
+  scale_x_log10(limits = c(min(df$residual.sugar), 20), breaks=c(1,2,3,5,10)) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Residual Sugar of High Quality Wine (Quality >= 8)')
+p1 <- qplot(x = residual.sugar, data = subset(df, quality<=4), binwidth = .05, fill = I('indianred3')) +
+  scale_x_log10(limits = c(min(df$residual.sugar),20), breaks=c(1,2,3,5,10)) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Residual Sugar of Low Quality Wine (Quality <= 4)')
+grid.arrange(p1, p2, ncol = 1)
+```
+
+Residual sugar shows a bimodal distribution for both low and high quality wines, which makes sense considering the distribution or residual sugar for all wines was also bimodal. It's unclear how much residual sugar influences wine quality at this point, but it will also be explored more later in this report.
+
+### Alcohol by Quality
+```{r echo=FALSE, Univariate_Plots}
+# Facet Wrap Alcohol by Quality
+qplot(x = factor(alcohol), data = df) +
+  scale_x_discrete(breaks = 1:31) +
+  facet_wrap(~quality, ncol=2)
+```
+
+Looking at a facet grid of alcohol grouped by quality rating, quality 4 and 5 appear to have a high count of lower alcohol-content wine, while quality = 8 has a high count in the upper range (above 11%).
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+The dataset contains data for 4,898 wines with 12 features (fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulphates, alcohol, quality). Quality is the only variable in the dataset that could be considered categorical, although it contains integer values.
+
+Quality of the wines range from 3 to 9 (on a scale of 0 to 10 with 10 being the highest possible rating). Most wines fall within the range of 5-7. Alcohol content for most wines are between 8% and 14%, with a median alcohol content of 10.4%. pH ranges from 2.7 to 3.8, with the majority falling in the range of 2.9 to 3.5
+
+### What is/are the main feature(s) of interest in your dataset?
+The main features of the dataset are alcohol, residual sugar, pH (acidity), and quality. I would like to determine how these first three features relate to each other and how they affect the quality rating on wine.
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+Fixed, citric, and volatile acidity are likely to contribute to the pH level of wine. I am also interested to see how density relates to alcohol content.
+
+I'm also interested in seeing how free sulfur dioxide relates to the pH level, and how this relationship affects wine quality. From some initial research, I've found that there is a recommended level of molecular SO2 for white wines (0.8ppm), which is given as a value dependent on pH as listed at the link here:
+http://srjcstaff.santarosa.edu/~jhenderson/SO2.pdf
+According to the link, "free SO2 over 50ppm can be tasted and detected in the nose of the wine." To analyze this, I've also created a variable (molecular SO2), which gives the value of free SO2 needed for different pH levels to give the recommended concentration of 0.8 ppm molecular SO2
+
+### Did you create any new variables from existing variables in the dataset?
+I created a new variable to calculate the ratio of free sulfur dioxide to total sulfur dioxide. 
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+Residual sugar showed a bimodal distribution, so a logarithmic transformation of the x-axis was used to confirm this observation. A similar transformation was used to notice the somewhat bimodal distribution of alcohol, and further investigation by observing only the highest and lowest quality of wines showed highly rated wines tend to contain more alcohol content then very lowly rated wine.
+
+There were some wines that contained exactly 0 g/dm^3 of citric acid, which is used add 'freshness' and flavor to wine. Upon further investigation, I found that because most naturally occurring citric acid from grapes is used during the wine's fermentation process, it is commonly added after fermentation to counteract sweetness and bitterness in the natural wine flavor. It makes sense then that the wines containing no citric acid received poor to mediocre quality ratings (6 or below).
+https://www.winefrog.com/definition/243/citric-acid
+
+# Bivariate Plots Section
+```{r echo=FALSE}
+correlation.subset = subset(df, select = c(fixed.acidity, residual.sugar, chlorides, free.sulfur.dioxide, total.sulfur.dioxide, density, pH, alcohol, quality))
+options(digits=2)
+cor(correlation.subset)
+options(digits=7)
+pairs.panels(correlation.subset)
+```
+
+From the subset of data selected for this analysis, it appears that there is a pretty high correlation between the following:
+
+* Residual sugar and wine density (0.84)
+
+* Density and alcohol (-0.78)
+
+* Total sulfur dioxide and free sulfur dioxide (0.62)
+
+I want to look at scatterplots for these three relationships and see if I can fit a linear or polynomial fit to these distributions.
+
+### Scatterplots
+
+```{r echo=FALSE}
+#   Density vs. Residual Sugar:                   0.8389
+ggplot(aes(x = density, y = residual.sugar), data = subset(df, density <= quantile(density, 0.99))) + 
+  geom_jitter(alpha = 1/20) + 
+  geom_smooth(method = 'lm', formula = y ~ poly(x,2), color = 'red')
+m <- lm(formula = residual.sugar ~ poly(density,2), data = subset(df, density <= quantile(density, 0.99)))
+summary(m)
+# cor(x=df$density, y=df$residual.sugar)
+```
+
+This Relationship appears to be positive and nonlinear. As density increases, residual sugar also increases at a more and more rapid rate. A 2nd order polynomial regression does a pretty good job at fitting this data, with an R^2 value of 0.74 (a linear fit only produced an R-squared value of 0.67)
+
+```{r echo = FALSE}
+ggplot(aes(x = total.sulfur.dioxide, y = free.sulfur.dioxide), data = df) + 
+  geom_jitter(alpha = 1/10) + 
+  geom_smooth(method = 'lm', color = 'red')
+m <- lm(formula = free.sulfur.dioxide ~ total.sulfur.dioxide, data = df)
+summary(m)
+# cor(x=df$total.sulfur.dioxide, y=df$free.sulfur.dioxide)
+```
+
+Relationship is clearly positive, with free sulfur dioxide increasing along with total sulfur dioxide, but does not show good correlation with linear fit. For higher values of SO2, the variation is too high to fit any sort of predictive model to the dataset.
+
+```{r echo = FALSE}
+#   Alcohol vs. Density:  -0.7801
+ggplot(aes(x = density, y = alcohol), data = subset(df, density <= quantile(df$density, 0.999))) + 
+  geom_jitter(alpha = 1/10, height = 0.5) + 
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 3))
+m <- lm(formula = alcohol ~ poly(density,3), data = subset(df, density <= quantile(df$density, 0.999)))
+summary(m)
+# cor(x=df$density, y=df$alcohol)
+```
+
+There is a strong relationship between alcohol and density, and it is fit fairly well using a 3rd order polynomial regression (R-squared value of 0.7). A high variation in the data, however, makes it very hard to accurately predict alcohol content based solely on density.
+
+```{r echo = FALSE}
+p1 <- ggplot(aes(x = residual.sugar, y = alcohol), data = df) +
+  geom_jitter(alpha = .1)
+p2 <- ggplot(aes(x = fixed.acidity, y = pH), data = df) + 
+  geom_jitter(alpha = 1/10)
+grid.arrange(p1, p2, ncol=2)
+
+cor(x=df$residual.sugar, y=df$alcohol)
+cor(x=df$fixed.acidity, y=df$pH)
+```
+
+The relationships between residual sugar and alcohol concentration and between fixed acidity and pH are moderately correlated, with correlation values of -0.45 and -0.43, respectively. It appears that pH decreases with increased fixed acidity, as one would expect, but there is a lot of variation in this to accurately predict based off a regression model alone.
+
+```{r echo = FALSE}
+ggplot(aes(x = alcohol, y = quality), data = df) + 
+  geom_jitter(alpha = 0.2, width=0.5, height=2)
+cor(x=df$alcohol, y=df$quality)
+```
+
+When plotted, there is some apparent positive correlation between alcohol and quality, with higher quality wine typical having a higher alcohol concentration, but it is clearly not the only factor influencing wine quality. Trying to correlate discrete quality measurements (integers) with more continuous data like alcohol content makes it difficult to find a strong linear correlation based on the data alone. This data would lend itself better to clustering by quality rating than by fitting a linear model.
+
+### Boxplots
+```{r echo = FALSE}
+p1 <- ggplot(data = subset(df, alcohol <= quantile(df$alcohol, 0.95)), aes(factor(quality), alcohol)) +
+  geom_boxplot() + 
+  theme_minimal() +
+  scale_y_continuous(limits = c(8,13)) +
+  xlab("Quality") + ylab("Alcohol") + ggtitle("Alcohol vs. Quality (Box)")
+#p1 <- boxplot(alcohol ~ quality, data = subset(df, alcohol <= quantile(df$alcohol, 0.95)), main = 'Alcohol vs. Quality', xlab = 'Quality', ylab = 'Alcohol (% ABV)')
+
+p2 <- ggplot(aes(x = quality, y = alcohol), data = df) +
+  coord_cartesian(xlim = c(3, 9), ylim = c(8, 13)) +
+  geom_line(stat = 'summary', fun.y = mean) +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .1), linetype = 2, color = 'blue') +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .5), color = 'blue') +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .9), linetype = 2, color = 'blue') + xlab("Quality") + ylab("Alcohol") + ggtitle("Alcohol vs. Quality (Line)")
+grid.arrange(p1, p2, ncol=2)
+
+with(df, tapply(alcohol, quality, summary))
+```
+
+Looking at a boxplot of alcohol vs wine quality, it is apparent that high quality wine tends to have a higher alcohol content than average wines. In this case there is a clear separation between high-quality and average quality, but it would be difficult to separate average and low-quality wines based solely on this criteria.
+
+```{r echo = FALSE}
+boxplot(pH ~ quality, data = subset(df, pH <= quantile(df$pH, 0.99)), xlab = 'Quality', ylab = 'pH', main = 'pH vs. Quality')
+with(df, tapply(pH, quality, summary))
+```
+
+The pH level of wine also has a slight impact on its quality, but does not appear to be significant enough to allow us to predict quality based on pH. There is much less variation in pH for the highest quality rating, but this could also be due to the limited number of samples with this quality score.
+
+```{r echo=FALSE}
+boxplot(density ~ quality, data = subset(df, density <= quantile(density, 0.999)), xlab = 'Quality', ylab = 'Density', main = 'Density vs. Quality')
+with(df, tapply(density, quality, summary))
+```
+
+There is a clear correlation betweeen density and quality, with higher quality wines having a lower density measurement. However, this could be either a contributor to the wine quality or, more likely, a result of higher alcohol content found in higher-quality wines.
+
+```{r echo=FALSE, Bivariate_Plots}
+# Look at Free SO2 vs pH again
+ggplot(aes(x = pH, y = free.sulfur.dioxide), data = subset(df, free.sulfur.dioxide <= quantile(free.sulfur.dioxide, 0.999))) +
+  geom_jitter(alpha = .2)
+cor(x=df$pH, y=df$free.sulfur.dioxide)
+```
+
+Finally, looking at how free SO2 relates to pH, there does not seem to be an apparent linear correlation between the two. However this will be explored further by grouping this data by quality in the next plotting section of this report.
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+Density had a strong correlation with residual sugar, where wines with a higher residual sugar content also tended to have higher density measurements. Density was also highly related to alcohol content as well.
+
+Looking at the other features of interest, quality seemed to be most influenced by alcohol content, but not to a degree that can assume a direct correlation. It appeared that higher quality wines had a higher alcohol content in general than lower quality, but the lowest overall alcohol content was found in average quality ratings. The lowest median ABV of 9.5% was found in wine with a quality of 5, while 3-quality wines had a median ABV of ~10.5%, and a rating of 8 of higher had a median ABV above 12%.
+
+pH was most related to fixed acidity, but did not seem to have any meaningful relationship with alcohol content, quality, or residual sugar.
+
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+There were a couple of unexpected but nonetheless meaningful correlations observed in the dataset. Some correlation was observed between pH and fixed acidity, although not as strong as one might expect. Additionally, citric acid and volatile acidity had little to no effect on wine pH level.
+One strong, and also relatively less surprising correlation was found between total SO2 and free SO2.
+
+### What was the strongest relationship you found?
+The strongest correlation in the dataset is a positive one between density and residual sugar. There was also a very strong negative correlation between density and alcohol content. However, this did not imply an equally strong relation between alcohol content and residual sugar, although some correlation was observed between these two factors.
+
+
+
+# Multivariate Plots Section
+
+The first thing I was interested in revisiting for this section was analyzing the level of molecular SO2 for each wine. For white wine, the recommended molecular SO2 is 0.8ppm, which corresponds to the following relationship of free SO2 to pH:
+
+```{r echo=FALSE}
+pH <- c(2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0)
+free.sulfur.dioxide <- c(11, 13, 16, 20, 26, 32, 40, 50, 63, 81, 99, 125)
+table(rep(pH, free.sulfur.dioxide))
+plot(x=pH, y=free.sulfur.dioxide, type = "b", main = "Free SO2 Needed to Achieve Molecular SO2 of 0.8ppm", sub = "Info from website : http://srjcstaff.santarosa.edu/~jhenderson/SO2.pdf", col='blue')
+```
+
+I added these to a new data frame called 'optim_wine' (containing "optimal" free SO2 for each pH level), and calculated a 3rd order polynomial regression model for it:
+
+```{r}
+optim_wine = data.frame(pH, free.sulfur.dioxide)
+model <- lm(optim_wine$free.sulfur.dioxide ~ poly(optim_wine$pH, 3))
+```
+```{r echo=FALSE}
+ggplot(data = optim_wine, aes(x=pH, y=free.sulfur.dioxide)) + 
+  geom_point() +
+  geom_smooth(formula = y ~ poly(x,3), data = optim_wine, method = 'lm') +
+  ggtitle("Check of Polynomial Regression for Website Data (Optimal Added Free SO2 vs Wine pH)")
+summary(model)
+```
+
+Additionally, I modified the main data frame to include two quality variables:
+
+* quality     - converted to a factor
+
+* quality_int - original integer quality variable
+
+```{r}
+df$quality_int <- df$quality
+df$quality <- as.factor(df$quality)
+```
+
+```{r echo = FALSE}
+colors <- colorRampPalette(c('blue', 'green', 'yellow', 'red'))(7)
+```
+
+Plotting this data of free SO2 vs pH, categorized by quality, and overlayed by the "optimum" free SO2 level, gives the following:
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(aes(x = pH, y = log10(free.sulfur.dioxide)), data = df) + 
+  geom_tile(aes(fill = quality, width = 0.008, height = .02), alpha = 1/2) +
+  # geom_point(aes(color = quality), alpha = 0.5, size = 1.5, position = 'jitter') +
+  scale_fill_manual(values = colors) +
+  scale_x_continuous(limits = c(2.7, 4)) +
+  scale_y_continuous(limits = c(0, 3)) +
+  ggtitle('Free Sulfur Dioxide vs. pH') +
+  geom_smooth(data = optim_wine, aes(x = pH, y = log10(free.sulfur.dioxide))) +
+  theme_dark()
+```
+
+It's difficult to see the relationship with all qualities on a single plot, although there are some clear points showing the lowest quality wines a great distance from the optimal line. I created 3 plots split by high, medium, and low quality wines.
+
+```{r echo=FALSE, warning=FALSE}
+p3 <- ggplot(aes(x = pH, y = log10(free.sulfur.dioxide)), data = subset(df, quality == "8" | quality == "9")) + 
+  geom_point(aes(color = quality), alpha = 1, size = 1, position = 'jitter') +
+  # scale_color_brewer(type = 'div',
+  #   guide = guide_legend(title = 'Quality', reverse = T,
+  #   override.aes = list(alpha = 1, size = 2))) +
+  scale_color_brewer(palette = "Spectral") +
+  scale_x_continuous(limits = c(2.7, 4)) +
+  scale_y_continuous(limits = c(0, 3)) +
+  ggtitle('Free Sulfur Dioxide vs. pH: High Quality Wine') + 
+  geom_smooth(data = optim_wine, aes(x = pH, y = log10(free.sulfur.dioxide))) +
+  theme_dark()
+
+p2 <- ggplot(aes(x = pH, y = log10(free.sulfur.dioxide)), data = subset(df, quality == "5" | quality == "6" | quality == "7")) + 
+  geom_point(aes(color = quality), alpha = .3, size = 1, position = 'jitter') +
+  # scale_color_brewer(type = 'div',
+  #   guide = guide_legend(title = 'Quality', reverse = T,
+  #   override.aes = list(alpha = 1, size = 2))) +
+  scale_color_brewer(palette = "Spectral") +
+  scale_x_continuous(limits = c(2.7, 4)) +
+  scale_y_continuous(limits = c(0, 3)) +
+  ggtitle('Free Sulfur Dioxide vs. pH: Medium Quality Wine') + 
+  geom_smooth(data = optim_wine, aes(x = pH, y = log10(free.sulfur.dioxide))) +
+  theme_dark()
+
+p1 <- ggplot(aes(x = pH, y = log10(free.sulfur.dioxide)), data = subset(df, quality == "3" | quality == "4")) + 
+  geom_point(aes(color = quality), alpha = 1, size = 1, position = 'jitter') +
+  # scale_color_brewer(type = 'div',
+  #   guide = guide_legend(title = 'Quality', reverse = T,
+  #   override.aes = list(alpha = 1, size = 2))) +
+  scale_color_brewer(palette = "Spectral") +
+  scale_x_continuous(limits = c(2.7, 4)) +
+  scale_y_continuous(limits = c(0, 3)) +
+  ggtitle('Free Sulfur Dioxide vs. pH: Low Quality Wine') + 
+  geom_smooth(data = optim_wine, aes(x = pH, y = log10(free.sulfur.dioxide))) +
+  theme_dark()
+
+grid.arrange(p1, p2, p3, ncol = 1)
+```
+
+Looking at the three plots, there is a clear difference between the high and low quality wines. The free SO2 measurements for the low-quality wines seem to be scattered in an unpredictable way around the optimal curve, while these measurements for high-quality wine appear much more concentrated around this line. This is a good indication that having the correct relationship of free SO2 to pH may be an important factor influencing wine quality, especially for higher pH measurements. However, more data is needed for higher and lower quality wines to confirm this interpretation of the data
+
+```{r echo=FALSE, warning=FALSE}
+# Density Plot (alcohol)
+ggplot(df, aes(alcohol)) +
+  geom_density(aes(color = quality)) + 
+  xlim(8, 15)
+```
+
+Looking at a density plot of alcohol, colored by quality rating, we again see a clear difference in alcohol concentration between higher and lower quality wines. For the high quality wine, it appears that a majority of them have an alcohol content above 12%, while most of the lower quality wines are below 12%
+
+```{r echo=FALSE, warning=FALSE}
+# Density Plots (residual sugar and pH)
+ggplot(df, aes(residual.sugar)) +
+  geom_density(aes(color = quality)) + 
+  xlim(.5, 30)
+
+ggplot(df, aes(pH)) +
+  geom_density(aes(color = quality)) + 
+  xlim(2.5, 4)
+```
+
+Residual sugar and pH prove to be less reliable ways of grouping by wine quality, although pH does tend to be slightly higher for higher quality wines, and falls within a much tighter range.
+
+```{r echo=FALSE}
+ggplot(df, aes(pH, alcohol)) + 
+  geom_tile(aes(fill = quality, width = .008, height = .08), alpha = 1) + 
+  scale_fill_brewer(palette = "RdBu") +
+  theme_dark()
+```
+
+This tile plot helps confirm our assumption that quality is strongly correlated to alcohol content, and only slightly related to pH. While there is no linear relationship for this data, it does suggest that clustering could be a good way of separating high and low quality wines on a plot of pH vs alcohol content.
+
+```{r echo = FALSE}
+ggplot(subset(df, df$residual.sugar<30), aes(residual.sugar, alcohol)) +
+  geom_tile(aes(fill = quality, width = 0.2, height = 0.08), alpha = 1) +
+  # scale_fill_manual(values = colors)
+  scale_fill_brewer(palette = "RdBu") +
+  theme_dark()
+
+ggplot(subset(df, df$residual.sugar<30), aes(residual.sugar, pH)) +
+  geom_tile(aes(fill = quality, width = 0.2, height = 0.008), alpha = 1) +
+  # scale_fill_manual(values = colors)
+  scale_fill_brewer(palette = "RdBu") +
+  theme_dark()
+```
+
+These two tile plots again confirm our previous observations that while alcohol seems to influence wine quality, it is difficult to correlate residual sugar with either alcohol or pH.
+
+```{r echo = FALSE}
+ggplot(subset(df, df$density<1.01), aes(density, alcohol)) +
+  geom_jitter(aes(color = quality), width = 0, height = 0.1, alpha = .6) + 
+  scale_color_brewer(palette = "RdBu") +
+  theme_dark()
+```
+
+Our last plot confirms a couple of final points. First, there is a clear relationship between alcohol and density, as we first observed in the Bivariate Plotting section of this report. Also, there is a pretty clear separation between high and low quality wine in the chart, with highly rated wine tending to have higher alcohol content and lower wine density.
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+It was very clear that alcohol concentration has a significant influence on wine quality. This has been a recurring observation throughout this report.
+
+Additionally, a good correlation between alcohol and density was observed during multivariate analysis, although density seems to be a result of alcohol concentration more than a contributing factor to influencing wine quality.
+
+We observed that while these plots grouped by wine quality do not provide a great linear relationship for predictive modeling, there were clear regions on plots of alcohol vs. pH and alcohol vs. density that may provide a good way of predicting wine quality based on this data.
+
+### Were there any interesting or surprising interactions between features?
+
+I was interested to find that there does seem to be an optimal relationship of free SO2 to pH that, while doesn't necessary guarantee a high wine quality, is important to protect wine from oxidation and spoilage. It is also almost necessary to have this ratio correct to achieve a high-quality wine.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, warning=FALSE, Plot_One}
+p2 <- qplot(x = alcohol, data = subset(df, quality_int>=8), binwidth = .01, fill = I('Blue'), color = I("White")) +
+  scale_x_log10(limits = c(min(df$alcohol), max(df$alcohol)), breaks=8:15) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Alcohol Content of High Quality Wine (Quality 8 or Higher)') + 
+  xlab("Alcohol (% by Volume") +
+  ylab("Number of Wines") +
+  theme_minimal()
+p1 <- qplot(x = alcohol, data = subset(df, quality_int<=4), binwidth = .01, fill = I('indianred3'), color = I("White")) +
+  scale_x_log10(limits = c(min(df$alcohol),max(df$alcohol)), breaks=8:15) +
+  scale_y_continuous(limits = c(0, 25)) +
+  ggtitle('Alcohol Content of Low Quality Wine (Quality 4 or Lower)') + 
+  xlab("Alcohol (% by Volume") +
+  ylab("Number of Wines") +
+  theme_minimal()
+grid.arrange(p1, p2, ncol = 1)
+```
+
+### Description One
+While the majority of low-quality wines have an alcohol content between 9% and 11%, most high-quality wine has an alcohol concentration above 11%. There is also somewhat of a gap for high quality wine between 9% and 10%, with only a few samples falling within this range.
+
+### Plot Two
+
+```{r echo=FALSE, Plot_Two}
+p1 <- ggplot(data = subset(df, alcohol <= quantile(df$alcohol, 0.95)), aes(factor(quality), alcohol)) +
+  geom_boxplot(aes(color=quality), show.legend = FALSE) + 
+  scale_fill_brewer(palette="Set1") +
+  theme_minimal() +
+  scale_y_continuous(limits = c(8,13)) +
+  xlab("Quality") + ylab("Alcohol (% ABV)") + ggtitle("Alcohol vs. Quality (Box)")
+#p1 <- boxplot(alcohol ~ quality, data = subset(df, alcohol <= quantile(df$alcohol, 0.95)), main = 'Alcohol vs. Quality', xlab = 'Quality', ylab = 'Alcohol (% ABV)')
+
+# p2 <- ggplot(aes(x = quality_int, y = alcohol), data = df) +
+#   coord_cartesian(xlim = c(3, 9), ylim = c(8, 13)) +
+#   geom_line(stat = 'summary', fun.y = mean) +
+#   geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .1), linetype = 2, color = 'blue') +
+#   geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .5), color = 'blue') +
+#   geom_line(stat = 'summary', fun.y = quantile, fun.args = list(probs = .9), linetype = 2, color = 'blue') + xlab("Quality") + ylab("Alcohol") + ggtitle("Alcohol vs. Quality (Line)")
+
+p3 <- ggplot(df, aes(alcohol)) +
+  geom_density(aes(color = quality)) + 
+  scale_fill_brewer(palette="Set1") +
+  xlim(8, 15) + ggtitle("Alcohol Content Density Plot (Grouped By Quality)") +
+  xlab("Alcohol (% ABV)") + ylab("Density")
+
+grid.arrange(p1, p3, ncol=1)
+```
+
+### Description Two
+While there is a clear separation in alcohol content between high-quality and average-quality wine, it is difficult to discern average and low-quality wines based solely on their alcohol content. Nevertheless, the majority of high quality wine has a median alcohol content above 11%, but the range for all wines is between 8.5% and 13.5%.
+
+### Plot Three
+
+```{r echo=FALSE, Plot_Three}
+ggplot(subset(df, df$density<1.01), aes(density, alcohol)) +
+  geom_jitter(aes(color = quality), width = 0, height = 0.1, alpha = .6) + 
+  scale_color_brewer(palette = "RdBu") +
+  theme_minimal() +
+  ggtitle("Alcohol vs. Wine Density") +
+  xlab("Wine Density (g/cm^3)") + ylab("Alcohol (% ABV)")
+```
+
+### Description Three
+There is definitely a relationship between Alcohol and Wine Density. However, although this relationship is not enough on its own to create a linear or quadratic predictive model of wine quality, there are clear regions on the plot for low and high quality wine. Wine quality could be predicted by applying machine learning techniques to appropriately group data based on alcohol content and density.
+
+------
+
+# Reflection
+I started this exploration of data by looking at each individual variable in the data set for 4,898 wines. I then proposed the problem of determining which factors have the most influence on wine quality. Based on my study on individual variables, I selected the three key factors of pH, residual sugar, and alcohol to be the primary basis of solving this problem, while paying attention still to the other variables as secondary factors. I also conducted some independent research to see what role other chemicals (such as Free SO2 and Citric Acid) play in the winemaking process, and chose to study these further as well.
+
+There was clearly a relationship from the beginning between alcohol content and wine quality, although it took a few methods of analysis to discover the extent of this correlation. Because quality was given as integer ratings, it was difficult to determine how strong the relationship was based solely on the calculated correlation coefficient (which was only 0.44), and bivariate analysis of alcohol vs. quality was not enough to identify a clear relationship. However, after applying multivariate analysis on alcohol, quality, and other variables (especially pH), it was apparent that although we could not find a linear relationship, there was a clearly defined separation in alcohol content for high quality wine vs. the rest of the dataset.
+
+Although I did not define a predictive model in this project, I believe there is a good opportunity to apply Machine Learning techniques to clearly define the factors that separate the highest quality wines from the rest. To do this, I would first recommend applying a supervised learning algorithm using classification to define a separation between this regions. It would also be useful to have a larger or separate dataset which contains more high-quality wine ratings to determine the validity of this predictive model, as well as applying the model to red wine data to see if it follows a similar relationship.
+
+# References
+
+What Is Citric Acid?        - https://www.winefrog.com/definition/243/citric-acid
+
+Acidity in Wine and Grapes  - http://www.calwineries.com/learn/wine-chemistry/acidity
+
+Calculating Molecular SO2   - http://srjcstaff.santarosa.edu/~jhenderson/SO2.pdf
+
+Winemaking Calculators      - https://www.winebusiness.com/tools/?go=winemaking.calc&cid=60
