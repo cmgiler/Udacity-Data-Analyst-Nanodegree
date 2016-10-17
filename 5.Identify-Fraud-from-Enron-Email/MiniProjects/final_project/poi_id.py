@@ -6,17 +6,106 @@ sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
+import matplotlib.pyplot as plt
+from collections import defaultdict
+import numpy as np
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary'] # You will need to use more features
+
+features_list = ['salary', 'bonus'] # You will need to use more features
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
+# List all features
+# Count dataset features
+# 	Total number of data points
+# 	Allocation across classes (POI vs non-POI)
+#	Number of features
+# 	Number of missing values
+
+print 
+print 'DATA POINTS'
+print '==========='
+print len(data_dict), 'total data points'
+count_poi = 0
+for person in data_dict:
+	if data_dict[person]['poi'] == 1:
+		count_poi += 1
+print count_poi, 'POI;	', len(data_dict) - count_poi, 'non-POI'
+
+
+print
+print
+print 'FEATURES'
+print '========'
+first_key = data_dict.keys()[0]
+print len(data_dict[first_key].keys()), 'features total'
+print
+print 'Feature breakdown:'
+data_types = defaultdict(list)
+for key in data_dict[first_key].keys():
+	data_type = type(data_dict[first_key][key])
+	data_types[data_type].append(key)
+print
+print 'Data Types:'
+for key in data_types:
+	print key,':'
+#	for item in data_types[key]:
+#		print '   ', item
+	print data_types[key]
+	print '------------'
+
+## Find missing data ('NaN')
+print 
+print 'MISSING DATA (NaN)'
+print '=================='
+print 'Count of NaN Values (for each feature) :'
+print
+# Initialize Counts:
+count_nan = defaultdict(int)
+for key in data_dict[first_key].keys():
+	count_nan[key] = 0
+# Increment Counter
+for person in data_dict:
+	for key in data_dict[person].keys():
+		if data_dict[person][key] == 'NaN':
+			count_nan[key] += 1
+# Sort dictionary by value and print values
+for key in sorted(count_nan, key=count_nan.get, reverse=True):
+  print key, count_nan[key]
+
+# Count NaN by Data Point:
+print 
+print
+print 'NaN by Data Point'
+print '================='
+count_nan_ind = defaultdict(int)
+for person in data_dict:
+	cnt = 0
+	for key in data_dict[person].keys():
+		if data_dict[person][key] == 'NaN':
+			cnt += 1
+	count_nan_ind[person] = cnt
+
+for key in sorted(count_nan_ind, key = count_nan_ind.get, reverse=True)[0:14]:
+	print key, count_nan_ind[key]
+
+print
+print 'LOCKHART EUGENE E:'
+print '=================='
+print data_dict['LOCKHART EUGENE E']
+
 ### Task 2: Remove outliers
+#print data_dict.keys()
+data_dict.pop('TOTAL')
+data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
+#print data_dict.keys()
+
+
 ### Task 3: Create new feature(s)
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
@@ -24,6 +113,15 @@ my_dataset = data_dict
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
+
+for point in data:
+	salary = point[0]
+	bonus = point[1]
+	plt.scatter(salary, bonus)
+plt.xlabel('salary')
+plt.ylabel('bonus')
+plt.show()
+
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.

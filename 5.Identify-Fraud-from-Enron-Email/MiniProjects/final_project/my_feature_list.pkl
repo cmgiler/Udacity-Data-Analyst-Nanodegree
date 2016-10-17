@@ -1,0 +1,6 @@
+(lp0
+S'salary'
+p1
+aS'bonus'
+p2
+a.
