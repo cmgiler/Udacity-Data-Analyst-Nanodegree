@@ -14,7 +14,13 @@ import numpy as np
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 
-features_list = ['salary', 'bonus'] # You will need to use more features
+features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_payments',
+       'exercised_stock_options', 'bonus', 'restricted_stock',
+       'shared_receipt_with_poi', 'restricted_stock_deferred',
+       'total_stock_value', 'expenses', 'loan_advances', 'from_messages',
+       'other', 'from_this_person_to_poi', 'poi', 'director_fees',
+       'deferred_income', 'long_term_incentive',
+       'from_poi_to_this_person'] # You will need to use more features
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -98,6 +104,10 @@ print
 print 'LOCKHART EUGENE E:'
 print '=================='
 print data_dict['LOCKHART EUGENE E']
+
+print 'WHALEY DAVID A:'
+print '=================='
+print data_dict['WHALEY DAVID A']
 
 ### Task 2: Remove outliers
 #print data_dict.keys()
