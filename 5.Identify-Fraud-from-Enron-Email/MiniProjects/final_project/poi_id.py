@@ -5,10 +5,36 @@ import pickle
 sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
-from tester import dump_classifier_and_data
+from tester import test_classifier, dump_classifier_and_data
 import matplotlib.pyplot as plt
-from collections import defaultdict
 import numpy as np
+from collections import defaultdict
+from time import time
+
+# Import classifiers to test
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.feature_selection import SelectKBest
+from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
+
+# Import metrics to analyze results
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report
+
+# Import functions for cross validation and parameter optimization
+from sklearn.grid_search import GridSearchCV
+from sklearn.cross_validation import train_test_split
+
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
