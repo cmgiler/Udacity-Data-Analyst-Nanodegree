@@ -139,7 +139,14 @@ print data_dict['WHALEY DAVID A']
 #print data_dict.keys()
 data_dict.pop('TOTAL')
 data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
+data_dict.pop('LOCKHART EUGENE E')
 #print data_dict.keys()
+
+# Replace NaN values
+from sklearn.preprocessing import Imputer
+imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
+imp.fit(data_dict)
+data_dict = imp.transform(data_dict)
 
 
 ### Task 3: Create new feature(s)
@@ -150,6 +157,7 @@ my_dataset = data_dict
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
+'''
 for point in data:
 	salary = point[0]
 	bonus = point[1]
@@ -157,7 +165,7 @@ for point in data:
 plt.xlabel('salary')
 plt.ylabel('bonus')
 plt.show()
-
+'''
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
