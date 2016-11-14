@@ -35,6 +35,9 @@ from sklearn.metrics import classification_report
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
 
+# Import user functions
+import my_functions as mf
+
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
@@ -142,11 +145,6 @@ data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
 data_dict.pop('LOCKHART EUGENE E')
 #print data_dict.keys()
 
-# Replace NaN values
-from sklearn.preprocessing import Imputer
-imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 0)
-imp.fit(data_dict)
-data_dict = imp.transform(data_dict)
 
 
 ### Task 3: Create new feature(s)
@@ -195,3 +193,6 @@ features_train, features_test, labels_train, labels_test = \
 ### generates the necessary .pkl files for validating your results.
 
 dump_classifier_and_data(clf, my_dataset, features_list)
+
+import tester
+tester.main()
