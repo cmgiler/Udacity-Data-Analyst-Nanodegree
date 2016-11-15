@@ -36,7 +36,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
 
 # Import user functions
-import my_functions as mf
+from my_functions import *
 
 
 ### Task 1: Select what features you'll use.
@@ -62,108 +62,77 @@ with open("final_project_dataset.pkl", "r") as data_file:
 #	Number of features
 # 	Number of missing values
 
+
+total_data_points, count_poi = num_datapoints(data_dict)
 print 
 print 'DATA POINTS'
 print '==========='
-print len(data_dict), 'total data points'
-count_poi = 0
-for person in data_dict:
-	if data_dict[person]['poi'] == 1:
-		count_poi += 1
-print count_poi, 'POI;	', len(data_dict) - count_poi, 'non-POI'
+print total_data_points, 'data points total'
+print count_poi, 'POI;	', total_data_points - count_poi, 'non-POI'
 
-
+feature_count, feature_data_types = num_features(data_dict)
 print
 print
 print 'FEATURES'
 print '========'
-first_key = data_dict.keys()[0]
-print len(data_dict[first_key].keys()), 'features total'
-print
-print 'Feature breakdown:'
-data_types = defaultdict(list)
-for key in data_dict[first_key].keys():
-	data_type = type(data_dict[first_key][key])
-	data_types[data_type].append(key)
+print feature_count, 'features total'
 print
 print 'Data Types:'
-for key in data_types:
+for key in feature_data_types:
 	print key,':'
 #	for item in data_types[key]:
 #		print '   ', item
-	print data_types[key]
+	print feature_data_types[key]
 	print '------------'
 
 ## Find missing data ('NaN')
+count_nan, count_nan_ind = num_nan_values(data_dict)
 print 
 print 'MISSING DATA (NaN)'
 print '=================='
 print 'Count of NaN Values (for each feature) :'
 print
-# Initialize Counts:
-count_nan = defaultdict(int)
-for key in data_dict[first_key].keys():
-	count_nan[key] = 0
-# Increment Counter
-for person in data_dict:
-	for key in data_dict[person].keys():
-		if data_dict[person][key] == 'NaN':
-			count_nan[key] += 1
-# Sort dictionary by value and print values
 for key in sorted(count_nan, key=count_nan.get, reverse=True):
   print key, count_nan[key]
-
-# Count NaN by Data Point:
 print 
 print
 print 'NaN by Data Point'
 print '================='
-count_nan_ind = defaultdict(int)
-for person in data_dict:
-	cnt = 0
-	for key in data_dict[person].keys():
-		if data_dict[person][key] == 'NaN':
-			cnt += 1
-	count_nan_ind[person] = cnt
-
 for key in sorted(count_nan_ind, key = count_nan_ind.get, reverse=True)[0:14]:
 	print key, count_nan_ind[key]
 
-print
-print 'LOCKHART EUGENE E:'
-print '=================='
-print data_dict['LOCKHART EUGENE E']
 
-print 'WHALEY DAVID A:'
-print '=================='
-print data_dict['WHALEY DAVID A']
 
 ### Task 2: Remove outliers
 #print data_dict.keys()
-data_dict.pop('TOTAL')
-data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
-data_dict.pop('LOCKHART EUGENE E')
+outliers = ['TOTAL','THE TRAVEL AGENCY IN THE PARK','LOCKHART EUGENE E']
+data_dict = remove_outliers(data_dict, outliers)
 #print data_dict.keys()
-
 
 
 ### Task 3: Create new feature(s)
 ### Store to my_dataset for easy export below.
+data_dict = preprocess_data(data_dict)
+data_dict, features_list = add_features(data_dict, features_list)
+
+total_data_points_new, count_poi_new = num_datapoints(data_dict)
+print '=================='
+print 'Total Data Points:', total_data_points, '->', total_data_points_new
+print 'POI Count:', count_poi, '->', count_poi_new
+
+count_nan_new, count_nan_ind_new = num_nan_values(data_dict)
+nan_cnt_old = 0
+nan_cnt_new = 0
+for key in sorted(count_nan, key=count_nan.get, reverse=True):
+  nan_cnt_old += count_nan[key]
+  nan_cnt_new += count_nan_new[key]
+print 'Total NaN Values:', nan_cnt_old, '->', nan_cnt_new
+
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
-
-'''
-for point in data:
-	salary = point[0]
-	bonus = point[1]
-	plt.scatter(salary, bonus)
-plt.xlabel('salary')
-plt.ylabel('bonus')
-plt.show()
-'''
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -171,6 +140,10 @@ plt.show()
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
+# Select Features
+top_features, score_pairs = select_features(data_dict, features_list, select_count=10)
+
+'''
 # Provided to give you a starting point. Try a variety of classifiers.
 from sklearn.naive_bayes import GaussianNB
 clf = GaussianNB()
@@ -196,3 +169,4 @@ dump_classifier_and_data(clf, my_dataset, features_list)
 
 import tester
 tester.main()
+'''

@@ -8,10 +8,18 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
-def num_features(data_dict):
-	features_count = len(data_dict[first_key].keys())
+def num_datapoints(data_dict):
+	total_data_points = len(data_dict)
+	count_poi = 0
+	for person in data_dict:
+		if data_dict[person]['poi'] == 1:
+			count_poi += 1
+	return total_data_points, count_poi
 
+
+def num_features(data_dict):
 	first_key = data_dict.keys()[0]
+	features_count = len(data_dict[first_key].keys())
 	data_types = defaultdict(list)
 	for key in data_dict[first_key].keys():
 		data_type = type(data_dict[first_key][key])
@@ -27,41 +35,32 @@ def num_nan_values(data_dict):
 		count_nan[key] = 0
 	for person in data_dict:
 		for key in data_dict[person].keys():
-			if np.isnan(data_dict[person][key]):
-				count_nan[key] += 1
+			if isinstance(data_dict[person][key], str):
+				if data_dict[person][key] == 'NaN':
+					count_nan[key] += 1
+			elif isinstance(data_dict[person][key], float):
+				if np.isnan(data_dict[person][key]):
+					count_nan[key] += 1
 
 	### Count by person
 	count_nan_ind = defaultdict(int)
 	for person in data_dict:
 		cnt = 0
 		for key in data_dict[person].keys():
-			if np.isnan(data_dict[person][key]):
-				cnt += 1
+			if isinstance(data_dict[person][key], str):
+				if data_dict[person][key] == 'NaN':
+					cnt += 1
+			elif isinstance(data_dict[person][key], float):
+				if np.isnan(data_dict[person][key]):
+					cnt += 1
 		count_nan_ind[person] = cnt
-
-	### Print to console
-	print 'MISSING DATA (NaN)'
-	print '=================='
-	print 'Count of NaN Values (for each feature) :'
-
-	# Sort dictionary by value and print values
-	print
-	for key in sorted(count_nan, key=count_nan.get, reverse=True):
-	    print key, count_nan[key]
-
-	# Print by data point
-	print 
-	print
-	print 'NaN by Data Point'
-	print '================='
-	for key in sorted(count_nan_ind, key = count_nan_ind.get, reverse=True)[0:14]:
-		print key, count_nan_ind[key]
+	return count_nan, count_nan_ind
 
 
 def remove_outliers(data_dict, outliers):
 	for name in outliers:
-    	data_dict.pop(name)
-    return data_dict
+		data_dict.pop(name)
+	return data_dict
 
 
 def preprocess_data(data_dict):
@@ -78,20 +77,22 @@ def preprocess_data(data_dict):
 	return data_dict
 
 
-def add_features(data_dict):
+def add_features(data_dict, features_list):
 	# Convert to dataframe for easier processing
 	df = pd.DataFrame.from_dict(data_dict, orient='index')
 	# Create new features
 	# Fraction from poi
+	
 	df['fraction_from_poi'] = df['from_poi_to_this_person']/df['from_messages']
 	features_list.append('fraction_from_poi')
+	
 	# Fraction to poi
 	df['fraction_to_poi'] = df['from_this_person_to_poi']/df['to_messages']
 	features_list.append('fraction_to_poi')
 
 	# Convert back to dict and return
 	data_dict = df.T.to_dict()
-	return data_dict
+	return data_dict, features_list
 
 
 def select_features(data_dict, features_list, select_count=10, 
@@ -123,15 +124,16 @@ def select_features(data_dict, features_list, select_count=10,
 		features_names = zip(*score_pairs)[0]
 		score = zip(*score_pairs)[1]
 		x_pos = np.arange(len(features_names)) 
-		plt.figure(figsize=(10,8))
+		#plt.figure(figsize=(10,8))
+		plt.figure()
 		plt.barh(x_pos, score, align='center')
 		plt.yticks(x_pos, features_names) 
 		plt.ylabel('Score')
 		plt.xlabel('Feature')
 		plt.gca().invert_yaxis()
-		for i, v in enumerate(score):
-		    v = float("{0:.2f}".format(v))
-		    plt.text(v + .5, i+.25, str(v), color='blue', fontweight='bold')
+		#for i, v in enumerate(score):
+		#    v = float("{0:.2f}".format(v))
+		#    plt.text(v + .5, i+.25, str(v), color='blue', fontweight='bold')
 		plt.show()
 
 	return top_features, score_pairs
@@ -209,11 +211,8 @@ def rank_features(data_dict, features_list, plot_results=True):
 
 def test_algorithm(clf, features, labels, score_str, cv):
 	from sklearn.cross_validation import cross_val_score
-    return np.mean(cross_val_score(clf,
-                                   features,
-                                   labels,
-                                   scoring=score_str,
-                                   cv=cv))
+	return np.mean(cross_val_score(clf,features,labels,scoring=score_str,cv=cv))
+
 
 def plot_df_results(df_results):
 	ax = df_results.plot(kind='bar',figsize=(10,10),fontsize=12)
