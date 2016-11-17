@@ -10,10 +10,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 from time import time
+import re
 
 # Import classifiers to test
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -47,7 +48,7 @@ features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_pay
        'exercised_stock_options', 'bonus', 'restricted_stock',
        'shared_receipt_with_poi', 'restricted_stock_deferred',
        'total_stock_value', 'expenses', 'loan_advances', 'from_messages',
-       'other', 'from_this_person_to_poi', 'poi', 'director_fees',
+       'other', 'from_this_person_to_poi', 'director_fees',
        'deferred_income', 'long_term_incentive',
        'from_poi_to_this_person'] # You will need to use more features
 
@@ -141,13 +142,52 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Select Features
-top_features, score_pairs = select_features(data_dict, features_list, select_count=10)
+top_features, score_pairs = select_features(data_dict, 
+                                            features_list, 
+                                            select_count=10,
+                                            plot_results=False)
+print top_features
+
+ranking_pairs = rank_features(data_dict, 
+                              top_features, 
+                              plot_results=False)
+
+# Provided to give you a starting point. Try a variety of classifiers.
+top_features = ['poi',
+                'total_stock_value',
+                'exercised_stock_options',
+                'deferred_income',
+                'bonus',
+                'salary']
+# Reload data using only top 10 features found through K-Best Selection
+data = featureFormat(data_dict, top_features, sort_keys=True)
+labels, features = targetFeatureSplit(data)
+
+### Feature scaling
+from sklearn import preprocessing
+features = preprocessing.MinMaxScaler().fit_transform(features)
+
+from sklearn.cross_validation import StratifiedShuffleSplit
+cv = StratifiedShuffleSplit(labels)
+
+models = [GaussianNB(), LinearSVC(), LogisticRegression(), 
+          DecisionTreeClassifier(), KNeighborsClassifier(), AdaBoostClassifier(),
+          RandomForestClassifier()]
+
+test_results = {}
+for i in range(len(models)):
+    clf = models[i]
+    clf_str = re.split(r'\(', str(clf))[0]
+    test_results[clf_str] = {}
+    test_results[clf_str]['Accuracy'] = test_algorithm(clf,features,labels,'accuracy',cv)
+    test_results[clf_str]['Precision'] = test_algorithm(clf,features,labels,'precision',cv)
+    test_results[clf_str]['Recall'] = test_algorithm(clf,features,labels,'recall',cv)
+
+df_results = pd.DataFrame.from_dict(test_results).T
+
+#plot_df_results(df_results)
 
 '''
-# Provided to give you a starting point. Try a variety of classifiers.
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
-
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
 ### folder for details on the evaluation method, especially the test_classifier
@@ -159,14 +199,14 @@ clf = GaussianNB()
 from sklearn.cross_validation import train_test_split
 features_train, features_test, labels_train, labels_test = \
     train_test_split(features, labels, test_size=0.3, random_state=42)
-
+'''
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
-
+features_list = top_features
+clf = GaussianNB()
 dump_classifier_and_data(clf, my_dataset, features_list)
 
 import tester
 tester.main()
-'''

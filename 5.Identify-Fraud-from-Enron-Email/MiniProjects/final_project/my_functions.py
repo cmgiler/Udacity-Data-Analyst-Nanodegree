@@ -147,7 +147,7 @@ def rank_features(data_dict, features_list, plot_results=True):
 	from sklearn.linear_model import LogisticRegression
 
 	# Reload data using only top 10 features found through K-Best Selection
-	data = featureFormat(data_dict, top_features, sort_keys=True)
+	data = featureFormat(data_dict, features_list, sort_keys=True)
 	labels, features = targetFeatureSplit(data)
 	
 	### Feature scaling
@@ -172,8 +172,8 @@ def rank_features(data_dict, features_list, plot_results=True):
 	ranking_dict = {}
 	ranking = rfe.ranking_
 	for i in range(len(ranking)):
-	    ranking_dict[top_features[i+1]] = (feat_imp[i], ranking[i])
-	ranking_pairs = zip(top_features[1:], feat_imp, ranking)
+	    ranking_dict[features_list[i+1]] = (feat_imp[i], ranking[i])
+	ranking_pairs = zip(features_list[1:], feat_imp, ranking)
 	ranking_pairs = sorted(ranking_pairs, key = lambda x: x[1])
 	ranking_pairs.reverse()
 
@@ -215,7 +215,7 @@ def test_algorithm(clf, features, labels, score_str, cv):
 
 
 def plot_df_results(df_results):
-	ax = df_results.plot(kind='bar',figsize=(10,10),fontsize=12)
+	ax = df_results.plot(kind='bar',figsize=(8,5),fontsize=12)
 	ax.set_title('Results of Different Models\n(Using Default Settings)',fontsize=16)
 	ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
 	ax.text(-0.05,0.32,'Score > 0.3',fontsize=12,color='r')
