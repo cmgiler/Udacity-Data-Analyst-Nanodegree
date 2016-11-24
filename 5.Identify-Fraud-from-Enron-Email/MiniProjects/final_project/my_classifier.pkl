@@ -9,4 +9,11 @@ object
 p2
 Ntp3
 Rp4
-.
+(dp5
+S'priors'
+p6
+NsS'_sklearn_version'
+p7
+S'0.18.1'
+p8
+sb.
