@@ -1,0 +1,11 @@
+References used for this project:
+
+- www.stackoverflow.com
+- http://scikit-learn.org/stable/user_guide.html
+- http://www.nytimes.com/2006/01/29/business/businessspecial3/10-enron-players-where-they-landed-after-the-fall.html
+- https://en.wikipedia.org/wiki/Precision_and_recall
+- https://en.wikipedia.org/wiki/Enron_scandal
+- https://en.wikipedia.org/wiki/Enron
+
+
+I hereby confirm that this submission is my work. I have cited above the origins of any parts of the submission that were taken from Websites, books, forums, blog posts, github repositories, etc.

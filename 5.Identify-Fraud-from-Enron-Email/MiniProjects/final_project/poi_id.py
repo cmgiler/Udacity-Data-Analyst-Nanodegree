@@ -200,7 +200,8 @@ for i in range(len(models)):
 df_results = pd.DataFrame.from_dict(test_results).T
 plot_df_results(df_results)
 
-'''
+
+
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
 ### folder for details on the evaluation method, especially the test_classifier
@@ -208,14 +209,7 @@ plot_df_results(df_results)
 ### stratified shuffle split cross validation. For more info: 
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
-# Example starting point. Try investigating other evaluation techniques!
-from sklearn.cross_validation import train_test_split
-features_train, features_test, labels_train, labels_test = \
-    train_test_split(features, labels, test_size=0.3, random_state=42)
-'''
-
 ### Find best parameters for AdaBoostClassifier and RandomForestClassifier
-'''
 print
 print 'Optimized Parameters'
 print '===================='
@@ -238,7 +232,6 @@ print
 print 'RandomForestClassifier():'
 print abc_optim.best_params_
 print
-'''
 
 # Re-run with optimized parameters
 models = [GaussianNB(), AdaBoostClassifier(algorithm='SAMME.R',n_estimators=5,random_state=10),
