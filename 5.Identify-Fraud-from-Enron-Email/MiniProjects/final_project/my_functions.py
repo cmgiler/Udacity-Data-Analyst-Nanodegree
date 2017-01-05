@@ -81,8 +81,8 @@ def add_features(data_dict, features_list):
 	# Convert to dataframe for easier processing
 	df = pd.DataFrame.from_dict(data_dict, orient='index')
 	# Create new features
+
 	# Fraction from poi
-	
 	df['fraction_from_poi'] = df['from_poi_to_this_person']/df['from_messages']
 	features_list.append('fraction_from_poi')
 	
@@ -156,7 +156,7 @@ def rank_features(data_dict, features_list, plot_results=True):
 
 	# Create a base classifier used to evaluate a subset of attributes
 	model = LogisticRegression()
-	model_fi = ExtraTreesClassifier()
+	model_fi = ExtraTreesClassifier(random_state=10)
 
 	# create the RFE model and select 10 attributes
 	rfe = RFE(model, 1)
@@ -215,14 +215,11 @@ def test_algorithm(clf, features, labels, score_str, cv):
 
 
 def plot_df_results(df_results):
-	ax = df_results.plot(kind='bar',figsize=(8,5),fontsize=12)
+	ax = df_results.plot(kind='bar',figsize=(10,5),fontsize=12)
 	ax.set_title('Results of Different Models\n(Using Default Settings)',fontsize=16)
 	ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
-	ax.text(-0.05,0.32,'Score > 0.3',fontsize=12,color='r')
+	ax.text(.12,0.265,'Score > \n      0.3',fontsize=12,color='r')
 	ax.set_xlabel('Algorithm',fontsize=16)
 	ax.set_ylabel('Score Value',fontsize=16)
 	ax.plot([-.5, 6.5],[0.30, 0.30],'k--',linewidth=2)
 	plt.show()
-
-
-
