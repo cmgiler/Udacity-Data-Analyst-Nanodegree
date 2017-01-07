@@ -12,6 +12,7 @@ from collections import defaultdict
 from time import time
 import re
 
+
 # Import classifiers to test
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC, LinearSVC
@@ -22,6 +23,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 from sklearn.feature_selection import SelectKBest
+from sklearn import preprocessing
 
 # Import metrics to analyze results
 from sklearn.metrics import accuracy_score
@@ -33,6 +35,7 @@ from sklearn.metrics import classification_report
 # Import functions for cross validation and parameter optimization
 from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import StratifiedShuffleSplit
 
 # Import user-defined functions
 from my_functions import *
@@ -114,7 +117,52 @@ data_dict = preprocess_data(data_dict)
 ### Add new features to data dictionary
 ###   - fraction_from_poi = from_poi_to_this_person / from_messages
 ###   - fraction_to_poi = from_this_person_to_poi / to_messages
+
+### Calculate metrics before adding new features
+clf_feature_check = GaussianNB()
+labels, features = targetFeatureSplit(featureFormat(data_dict, features_list))
+cv = StratifiedShuffleSplit(labels, n_iter=50, test_size=.1, random_state=10)
+features = preprocessing.MinMaxScaler().fit_transform(features)
+test_results = {}
+test_results['Before'] = {}
+test_results['Before']['Accuracy'] = test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
+test_results['Before']['Precision'] = test_algorithm(clf_feature_check,features,labels,'precision',cv)
+test_results['Before']['Recall'] = test_algorithm(clf_feature_check,features,labels,'recall',cv)
+#test_results['Before Feature Add']['Number_Features'] = len(features_list)
+
+### Add new features
 data_dict, features_list = add_features(data_dict, features_list)
+
+### Calculate metrics after adding new features
+labels, features = targetFeatureSplit(featureFormat(data_dict, features_list))
+cv = StratifiedShuffleSplit(labels, n_iter=50, test_size=.1, random_state=10)
+features = preprocessing.MinMaxScaler().fit_transform(features)
+test_results['After'] = {}
+test_results['After']['Accuracy'] = test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
+test_results['After']['Precision'] = test_algorithm(clf_feature_check,features,labels,'precision',cv)
+test_results['After']['Recall'] = test_algorithm(clf_feature_check,features,labels,'recall',cv)
+#test_results['After Feature Add']['Number_Features'] = len(features_list)
+
+
+df_test_results = pd.DataFrame.from_dict(test_results).T
+df_test_results = df_test_results.reindex(['Before','After'])
+
+'''
+# Plot results
+ax = df_test_results.plot(kind='bar', figsize=(10,5), fontsize=12)
+ax.set_title('Results of Adding New Features\n[Gaussian Naive-Bayes Classifier]', fontsize=16)
+ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
+ax.text(.4,0.32,'Score > 0.3',fontsize=14,color='r')
+ax.set_ylabel('Score Value',fontsize=16)
+ax.plot([-.5, 6.5],[0.30, 0.30],'k--',linewidth=2)
+plt.show()
+'''
+
+print '=================='
+print 'Results of adding new features:'
+print df_test_results
+print
+
 
 ### Print new count of data points and POI data points
 total_data_points_new, count_poi_new = num_datapoints(data_dict)
@@ -174,7 +222,6 @@ data = featureFormat(data_dict, top_features, sort_keys=True)
 labels, features = targetFeatureSplit(data)
 
 ### Feature scaling
-from sklearn import preprocessing
 features = preprocessing.MinMaxScaler().fit_transform(features)
 
 ### Test a number of different models with their default parameters to determine
@@ -185,7 +232,6 @@ models = [GaussianNB(), LinearSVC(), LogisticRegression(),
           DecisionTreeClassifier(), KNeighborsClassifier(), AdaBoostClassifier(),
           RandomForestClassifier()]
 
-from sklearn.cross_validation import StratifiedShuffleSplit
 cv = StratifiedShuffleSplit(labels, n_iter = 50, test_size = 0.1, random_state = 10)
 
 test_results = {}
