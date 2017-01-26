@@ -8,6 +8,7 @@ from feature_format import featureFormat, targetFeatureSplit
 from tester import test_classifier, dump_classifier_and_data
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from collections import defaultdict
 from time import time
 import re
@@ -38,26 +39,27 @@ from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import StratifiedShuffleSplit
 
 # Import user-defined functions
-from my_functions import *
+import my_functions as mf
 
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_payments',
-       'exercised_stock_options', 'bonus', 'restricted_stock',
-       'shared_receipt_with_poi', 'restricted_stock_deferred',
-       'total_stock_value', 'expenses', 'loan_advances', 'from_messages',
-       'other', 'from_this_person_to_poi', 'director_fees',
-       'deferred_income', 'long_term_incentive',
-       'from_poi_to_this_person']
+features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 
+      'total_payments', 'exercised_stock_options', 'bonus', 
+      'restricted_stock', 'shared_receipt_with_poi', 
+      'restricted_stock_deferred', 'total_stock_value', 'expenses', 
+      'loan_advances', 'from_messages', 'other', 'from_this_person_to_poi', 
+      'director_fees', 'deferred_income', 'long_term_incentive',
+      'from_poi_to_this_person']
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
-### List total number of data points, and data point split between POI and non-POI
-total_data_points, count_poi = num_datapoints(data_dict)
+### List total number of data points, and data point split between POI and 
+### non-POI
+total_data_points, count_poi = mf.num_datapoints(data_dict)
 print 
 print 'DATA POINTS'
 print '==========='
@@ -65,7 +67,7 @@ print total_data_points, 'data points total'
 print count_poi, 'POI;	', total_data_points - count_poi, 'non-POI'
 
 ### List total number of features
-feature_count, feature_data_types = num_features(data_dict)
+feature_count, feature_data_types = mf.num_features(data_dict)
 print
 print
 print 'FEATURES'
@@ -81,7 +83,7 @@ for key in feature_data_types:
 	print '------------'
 
 ### List number of missing data points ('NaN') for each feature
-count_nan, count_nan_ind = num_nan_values(data_dict)
+count_nan, count_nan_ind = mf.num_nan_values(data_dict)
 print 
 print 'MISSING DATA (NaN)'
 print '=================='
@@ -104,7 +106,7 @@ print
 
 ### Task 2: Remove outliers
 outliers = ['TOTAL','THE TRAVEL AGENCY IN THE PARK','LOCKHART EUGENE E']
-data_dict = remove_outliers(data_dict, outliers)
+data_dict = mf.remove_outliers(data_dict, outliers)
 
 
 
@@ -112,7 +114,7 @@ data_dict = remove_outliers(data_dict, outliers)
 ### Store to my_dataset for easy export below.
 
 ### Replace NaN values with median values for feature over all data points
-data_dict = preprocess_data(data_dict)
+data_dict = mf.preprocess_data(data_dict)
 
 ### Add new features to data dictionary
 ###   - fraction_from_poi = from_poi_to_this_person / from_messages
@@ -125,22 +127,28 @@ cv = StratifiedShuffleSplit(labels, n_iter=50, test_size=.1, random_state=10)
 features = preprocessing.MinMaxScaler().fit_transform(features)
 test_results = {}
 test_results['Before'] = {}
-test_results['Before']['Accuracy'] = test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
-test_results['Before']['Precision'] = test_algorithm(clf_feature_check,features,labels,'precision',cv)
-test_results['Before']['Recall'] = test_algorithm(clf_feature_check,features,labels,'recall',cv)
+test_results['Before']['Accuracy'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
+test_results['Before']['Precision'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'precision',cv)
+test_results['Before']['Recall'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'recall',cv)
 #test_results['Before Feature Add']['Number_Features'] = len(features_list)
 
 ### Add new features
-data_dict, features_list = add_features(data_dict, features_list)
+data_dict, features_list = mf.add_features(data_dict, features_list)
 
 ### Calculate metrics after adding new features
 labels, features = targetFeatureSplit(featureFormat(data_dict, features_list))
 cv = StratifiedShuffleSplit(labels, n_iter=50, test_size=.1, random_state=10)
 features = preprocessing.MinMaxScaler().fit_transform(features)
 test_results['After'] = {}
-test_results['After']['Accuracy'] = test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
-test_results['After']['Precision'] = test_algorithm(clf_feature_check,features,labels,'precision',cv)
-test_results['After']['Recall'] = test_algorithm(clf_feature_check,features,labels,'recall',cv)
+test_results['After']['Accuracy'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'accuracy',cv)
+test_results['After']['Precision'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'precision',cv)
+test_results['After']['Recall'] = \
+          mf.test_algorithm(clf_feature_check,features,labels,'recall',cv)
 #test_results['After Feature Add']['Number_Features'] = len(features_list)
 
 
@@ -150,8 +158,10 @@ df_test_results = df_test_results.reindex(['Before','After'])
 '''
 # Plot results
 ax = df_test_results.plot(kind='bar', figsize=(10,5), fontsize=12)
-ax.set_title('Results of Adding New Features\n[Gaussian Naive-Bayes Classifier]', fontsize=16)
-ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
+ax.set_title('Results of Adding New Features\n[Gaussian Naive-Bayes Classifier]', 
+              fontsize=16)
+ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', 
+              borderaxespad=0)
 ax.text(.4,0.32,'Score > 0.3',fontsize=14,color='r')
 ax.set_ylabel('Score Value',fontsize=16)
 ax.plot([-.5, 6.5],[0.30, 0.30],'k--',linewidth=2)
@@ -165,13 +175,13 @@ print
 
 
 ### Print new count of data points and POI data points
-total_data_points_new, count_poi_new = num_datapoints(data_dict)
+total_data_points_new, count_poi_new = mf.num_datapoints(data_dict)
 print '=================='
 print 'Total Data Points:', total_data_points, '->', total_data_points_new
 print 'POI Count:', count_poi, '->', count_poi_new
 
 ### Print new total number of NaN values in data dictionary
-count_nan_new, count_nan_ind_new = num_nan_values(data_dict)
+count_nan_new, count_nan_ind_new = mf.num_nan_values(data_dict)
 nan_cnt_old = 0
 nan_cnt_new = 0
 for key in sorted(count_nan, key=count_nan.get, reverse=True):
@@ -179,7 +189,8 @@ for key in sorted(count_nan, key=count_nan.get, reverse=True):
   nan_cnt_new += count_nan_new[key]
 print 'Total NaN Values:', nan_cnt_old, '->', nan_cnt_new
 
-### Save updated 'data_dict' to variable named 'my_dataset' to dump at end of script
+### Save updated 'data_dict' to variable named 'my_dataset' to dump at end of 
+### script
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
@@ -195,7 +206,7 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Select Features
-top_features, score_pairs = select_features(data_dict, 
+top_features, score_pairs = mf.select_features(data_dict, 
                                             features_list, 
                                             select_count=8,
                                             plot_results=False)
@@ -205,7 +216,7 @@ print '============'
 print top_features
 print
 
-ranking_pairs = rank_features(data_dict, 
+ranking_pairs = mf.rank_features(data_dict, 
                               top_features, 
                               plot_results=False)
 
@@ -217,34 +228,39 @@ top_features = ['poi',
                 'bonus',
                 'salary']
 
-# Reload data using only top 5 features found through K-Best Selection and Feature Ranking
+# Reload data using only top 5 features found through K-Best Selection and 
+# Feature Ranking
 data = featureFormat(data_dict, top_features, sort_keys=True)
 labels, features = targetFeatureSplit(data)
 
 ### Feature scaling
 features = preprocessing.MinMaxScaler().fit_transform(features)
 
-### Test a number of different models with their default parameters to determine
-### which to explore further
+### Test a number of different models with their default parameters to 
+### determine which to explore further
 ### Test using cross-validation w/ a Stratified Shuffle Split 
 ### (average score over 100 pseudo-randomized iterations)
 models = [GaussianNB(), LinearSVC(), LogisticRegression(), 
-          DecisionTreeClassifier(), KNeighborsClassifier(), AdaBoostClassifier(),
-          RandomForestClassifier()]
+          DecisionTreeClassifier(), KNeighborsClassifier(), 
+          AdaBoostClassifier(), RandomForestClassifier()]
 
-cv = StratifiedShuffleSplit(labels, n_iter = 50, test_size = 0.1, random_state = 10)
+cv = StratifiedShuffleSplit(labels, n_iter = 50, test_size = 0.1, 
+                            random_state = 10)
 
 test_results = {}
 for i in range(len(models)):
     clf = models[i]
     clf_str = re.split(r'\(', str(clf))[0]
     test_results[clf_str] = {}
-    test_results[clf_str]['Accuracy'] = test_algorithm(clf,features,labels,'accuracy',cv)
-    test_results[clf_str]['Precision'] = test_algorithm(clf,features,labels,'precision',cv)
-    test_results[clf_str]['Recall'] = test_algorithm(clf,features,labels,'recall',cv)
+    test_results[clf_str]['Accuracy'] = \
+                mf.test_algorithm(clf,features,labels,'accuracy',cv)
+    test_results[clf_str]['Precision'] = \
+                mf.test_algorithm(clf,features,labels,'precision',cv)
+    test_results[clf_str]['Recall'] = \
+                mf.test_algorithm(clf,features,labels,'recall',cv)
 
 df_results = pd.DataFrame.from_dict(test_results).T
-plot_df_results(df_results)
+mf.plot_df_results(df_results)
 
 
 
@@ -280,23 +296,34 @@ print abc_optim.best_params_
 print
 
 # Re-run with optimized parameters
-models = [GaussianNB(), AdaBoostClassifier(algorithm='SAMME.R',n_estimators=5,random_state=10),
-          RandomForestClassifier(n_estimators=2,min_samples_split=6,min_samples_leaf=1)]
-cv = StratifiedShuffleSplit(labels, n_iter = 100, test_size = 0.5, random_state = 10)
+models = [GaussianNB(), 
+          AdaBoostClassifier(algorithm='SAMME.R',
+                             n_estimators=5,
+                             random_state=10),
+          RandomForestClassifier(n_estimators=2,
+                                 min_samples_split=6,
+                                 min_samples_leaf=1)]
+cv = StratifiedShuffleSplit(labels, n_iter = 100, 
+                            test_size = 0.5, random_state = 10)
 test_results = {}
 for i in range(len(models)):
     clf = models[i]
     clf_str = re.split(r'\(', str(clf))[0]
     test_results[clf_str] = {}
-    test_results[clf_str]['Accuracy'] = test_algorithm(clf,features,labels,'accuracy',cv)
-    test_results[clf_str]['Precision'] = test_algorithm(clf,features,labels,'precision',cv)
-    test_results[clf_str]['Recall'] = test_algorithm(clf,features,labels,'recall',cv)
+    test_results[clf_str]['Accuracy'] = \
+                mf.test_algorithm(clf,features,labels,'accuracy',cv)
+    test_results[clf_str]['Precision'] = \
+                mf.test_algorithm(clf,features,labels,'precision',cv)
+    test_results[clf_str]['Recall'] = \
+                mf.test_algorithm(clf,features,labels,'recall',cv)
 
 ### Plot results
 df_results = pd.DataFrame.from_dict(test_results).T
 ax = df_results.plot(kind='bar',figsize=(10,5),fontsize=12)
-ax.set_title('Results of Different Models\n(Using Optimized Parameters)',fontsize=16)
-ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
+ax.set_title('Results of Different Models\n(Using Optimized Parameters)',
+              fontsize=16)
+ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', 
+          borderaxespad=0)
 ax.text(.12,0.265,'Score > \n      0.3',fontsize=12,color='r')
 ax.set_xlabel('Algorithm',fontsize=16)
 ax.set_ylabel('Score Value',fontsize=16)

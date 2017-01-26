@@ -6,6 +6,9 @@ References used for this project:
 - https://en.wikipedia.org/wiki/Precision_and_recall
 - https://en.wikipedia.org/wiki/Enron_scandal
 - https://en.wikipedia.org/wiki/Enron
+- http://sebastianraschka.com/Articles/2014_about_feature_scaling.html#about-min-max-scaling
+- http://machinelearningmastery.com/tactics-to-combat-imbalanced-classes-in-your-machine-learning-dataset/
+- https://en.wikipedia.org/wiki/Accuracy_paradox
 
 
 I hereby confirm that this submission is my work. I have cited above the origins of any parts of the submission that were taken from Websites, books, forums, blog posts, github repositories, etc.

@@ -211,13 +211,16 @@ def rank_features(data_dict, features_list, plot_results=True):
 
 def test_algorithm(clf, features, labels, score_str, cv):
 	from sklearn.cross_validation import cross_val_score
-	return np.mean(cross_val_score(clf,features,labels,scoring=score_str,cv=cv))
+	return np.mean(cross_val_score(clf,features,labels,
+								   scoring=score_str,cv=cv))
 
 
 def plot_df_results(df_results):
 	ax = df_results.plot(kind='bar',figsize=(10,5),fontsize=12)
-	ax.set_title('Results of Different Models\n(Using Default Settings)',fontsize=16)
-	ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', borderaxespad=0)
+	ax.set_title('Results of Different Models\n(Using Default Settings)',
+				 fontsize=16)
+	ax.legend(bbox_to_anchor=(0.95, 0.9, .17, 0), loc=3, ncol=1, mode='expand', 
+			  borderaxespad=0)
 	ax.text(.12,0.265,'Score > \n      0.3',fontsize=12,color='r')
 	ax.set_xlabel('Algorithm',fontsize=16)
 	ax.set_ylabel('Score Value',fontsize=16)
