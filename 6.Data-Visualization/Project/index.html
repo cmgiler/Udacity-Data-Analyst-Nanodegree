@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+    <style>
+      svg {
+         /*border: 1px solid black;*/
+      }
+
+      div#plot-map {
+        display: inline-block;
+      }
+
+      div#plot-line {
+        display: inline-block;
+      }
+
+      div#content {
+        text-align: center;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+    </style>
+    <script type="text/javascript">  
+
+      function draw_chart(data) {
+        "use strict";
+        var total_width = screen.width;
+        var margin = 75,
+            width = total_width/2.5 - margin,
+            height = 600 - margin;
+        var carrier = 'DL';
+
+        d3.select('#plot-line')
+          .append('h2')
+          .text('Airline Delays: ' + carrier);
+
+        
+        var svg_chart = d3.select('#plot-line')
+                          .append('svg')
+                          .attr('width', width + margin)
+                          .attr('height', height + margin)
+                          .append('g')
+                          .attr('class','chart');
+
+        d3.select('.chart')
+          .selectAll('circle')
+          .data(data)
+          .enter()
+          .append('circle');
+        
+        var time_extent = d3.extent(data, function(d) {
+          return d['year'];
+        })
+        var time_scale = d3.time.scale()
+                                .range([margin, width])
+                                .domain(time_extent)
+        var time_axis = d3.svg.axis()
+                          .scale(time_scale)
+                          .ticks(d3.time.years, 2);
+        
+        var delay_extent = d3.extent(data, function(d) {
+          if (d['arr_flights'] == 0) {
+            return 0;
+          }
+          else {
+            return d['arr_del15']/d['arr_flights'];
+          }
+        })
+        var delay_scale = d3.scale.linear()
+                            .range([height, margin])
+                            .domain(delay_extent);
+        var delay_axis = d3.svg.axis()
+                           .scale(delay_scale)
+                           .orient('left');
+
+        d3.select('.chart')
+          .append('g')
+          .attr('class', 'x axis')
+          .attr('transform', 'translate(0,' + height + ')')
+          .call(time_axis);
+
+        d3.select('.chart')
+          .append('g')
+          .attr('class', 'y axis')
+          .attr('transform', 'translate(' + margin + ')')
+          .call(delay_axis);
+
+        d3.selectAll('circle')
+          .attr('cx', function(d) {
+            if (d['carrier'] === carrier && d['is_hub'] == 1) {
+              return time_scale(d['year']);
+            }
+          })
+          .attr('cy', function(d) {
+            // debugger;
+            if (d['carrier'] === carrier && d['is_hub'] == 1) {
+              if (d['arr_flights'] == 0) {
+                return 0;
+              }
+              else {
+                return delay_scale(d['arr_del15']/d['arr_flights']);
+              }
+            }
+          })
+          .attr('r', function(d) {
+            if (d['carrier'] === carrier && d['is_hub'] == 1) {
+              return 5;  
+            }
+          })
+          .attr('fill', function(d) {
+            if (d['carrier'] === carrier && d['is_hub'] == 1) {
+              return 'red';
+            }
+            // else {
+            //   return 'blue';
+            // }
+          });
+
+
+      };
+
+      function draw_map(geo_data) {
+        "use_strict";
+        var total_width = screen.width;
+        var margin = 75,
+            width = total_width/2.5 - margin,
+            height = 600 - margin;
+
+        d3.select('#plot-map')
+          .append('h2')
+          .text('Airline Hubs');
+
+        var svg_map = d3.select('#plot-map')
+                        .append('svg')
+                        .attr('width', width + margin)
+                        .attr('height', height + margin)
+                        .append('g')
+                        .attr('class', 'map');
+        // Creating map
+        var projection = d3.geo.albersUsa()
+                                .scale(700)
+                                .translate([width/2, height/2]);
+        var path = d3.geo.path().projection(projection);
+        var map = svg_map.selectAll('path')
+                      .data(geo_data.features)
+                      .enter()
+                      .append('path')
+                      .attr('d', path)
+                      .style('fill', 'rgb(9,157,217)')
+                      .style('stroke', 'black')
+                      .style('stroke-width', 0.5);
+      }
+
+    </script>
+  </head>
+<body>
+  <h1>Flight Delays by Airline</h1>
+  <div id='content'>
+    <div id='plot-map'>
+      <script type="text/javascript">
+        d3.json('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA.geo.json', draw_map);
+      </script>
+    </div>
+    <div id='plot-line'>
+      <script type="text/javascript">
+        d3.csv("airline_delay_loc.csv", draw_chart);
+      </script>
+    </div>
+  </div>
+</body>
+</html>
