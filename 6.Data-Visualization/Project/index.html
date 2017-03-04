@@ -515,7 +515,7 @@
                                 return d['airport'];
                               })
                               .rollup(function(leaves) {
-                                
+                                // debugger;
                                 var coords = leaves.map(function(d) {
                                   return projection([+d.long, +d.lat]);
                                 })
@@ -529,7 +529,6 @@
                               })
                               .entries(data);
 
-              // debugger;
               var carriers = d3.set();
               for (var i = 0; i < nested.length; i++) {
                 carriers.add(nested[i].key);
@@ -558,7 +557,6 @@
             //Draw points on map
             d3.csv('airline_delay_loc.csv', plot_points_map);
 
-
             
 
             //Initialize Chart
@@ -580,15 +578,120 @@
                               .attr('class','chart');
 
             function plot_points_chart(data) {
-                d3.select('.chart')
-                  .selectAll('circle')
-                  .data(data)
-                  .enter()
-                  .append('circle');
                 
-                var time_extent = d3.extent(data, function(d) {
-                  return d['year'];
+
+                function agg_year(leaves) {
+                    var arr_flights_sum = d3.sum(leaves, function(d) {
+                        return d['arr_flights'];
+                    });
+                    var arr_del15_sum = d3.sum(leaves, function(d) {
+                        return d['arr_del15'];
+                    });
+                    var arr_cancelled_sum = d3.sum(leaves, function(d) {
+                        return d['arr_cancelled'];
+                    });
+                    var carrier_delay_sum = d3.sum(leaves, function(d) {
+                        return d['carrier_ct'];
+                    });
+                    var weather_delay_sum = d3.sum(leaves, function(d) {
+                        return d[' weather_ct'];
+                    });
+                    var nas_delay_sum = d3.sum(leaves, function(d) {
+                        return d['nas_ct'];
+                    });
+                    var security_delay_sum = d3.sum(leaves, function(d) {
+                        return d['security_ct'];
+                    });
+                    var late_aircraft_delay_sum = d3.sum(leaves, function(d) {
+                        return d['late_aircraft_ct'];
+                    });
+
+                    if (arr_flights_sum == 0) {
+                        arr_del15_pct = 0;
+                        arr_cancelled_pct = 0;
+                        carrier_delay_pct = 0;
+                        weather_delay_pct = 0;
+                        nas_delay_pct =0;
+                        security_delay_pct = 0;
+                        late_aircraft_delay_pct = 0;
+                    }
+                    else {
+                        arr_del15_pct = arr_del15_sum / arr_flights_sum;
+                        arr_cancelled_pct = arr_cancelled_sum / arr_flights_sum;
+                        carrier_delay_pct = carrier_delay_sum / arr_flights_sum;
+                        weather_delay_pct = weather_delay_sum / arr_flights_sum;
+                        nas_delay_pct =nas_delay_sum / arr_flights_sum;
+                        security_delay_pct = security_delay_sum / arr_flights_sum;
+                        late_aircraft_delay_pct = late_aircraft_delay_sum / arr_flights_sum;
+                    }
+
+                    return {
+                        'airport' : leaves[0].airport,
+                        'carrier' : leaves[0].carrier,
+                        'year' : leaves[0].year,
+                        'arr_flights_sum' : arr_flights_sum,
+                        'arr_del15_sum' : arr_del15_sum,
+                        'arr_del15_pct' : arr_del15_pct,
+                        'arr_cancelled_sum' : arr_cancelled_sum,
+                        'arr_cancelled_pct' : arr_cancelled_pct,
+                        'carrier_delay_sum' : carrier_delay_sum,
+                        'carrier_delay_pct' : carrier_delay_pct,
+                        'weather_delay_sum' : weather_delay_sum,
+                        'weather_delay_pct' : weather_delay_pct,
+                        'nas_delay_sum' : nas_delay_sum,
+                        'nas_delay_pct' : nas_delay_pct,
+                        'security_delay_sum' : security_delay_sum,
+                        'security_delay_pct' : security_delay_pct,
+                        'late_aircraft_delay_sum' : late_aircraft_delay_sum,
+                        'late_aircraft_delay_pct' : late_aircraft_delay_pct
+                    };
+                }
+
+                var nested = d3.nest()
+                                .key(function(d) {
+                                    return d['carrier'];
+                                })
+                                .key(function(d) {
+                                    return d['airport'];
+                                })
+                                .key(function(d) {
+                                    return d['year'];
+                                })
+                                .rollup(agg_year)
+                                .entries(data);
+                // debugger;
+                var max_flight = d3.max(nested, function(d) {
+                    return d3.max(d.values, function(d) {
+                        return d3.max(d.values, function(d) {
+                            arr_flights_sum = d.values['arr_flights_sum'];
+                            arr_del15_sum = d.values['arr_del15_sum'];
+                            if (arr_flights_sum == 0)
+                                return 0;
+                            else
+                                return d.values['arr_del15_sum']/d.values['arr_flights_sum'];
+                    });
+
+                    })
                 })
+
+                nested_filt = nested.filter(function(d) {
+                        return d['key'] == 'DL';
+                    })[0]
+                    .values.filter(function(d) {
+                        return d['key'] == 'SEA';
+                    })[0];
+
+
+                // d3.select('.chart')
+                //   .selectAll('circle')
+                //   .data(nested_filt.values)
+                //   .enter()
+                //   .append('circle');
+                
+                var time_extent = d3.extent(nested_filt.values, function(d) {
+                    return d['key'];
+                })
+
                 var time_scale = d3.time.scale()
                                         .range([ch_margin, ch_width-ch_margin])
                                         .domain(time_extent)
@@ -596,21 +699,17 @@
                                   .scale(time_scale)
                                   .ticks(d3.time.years, 1);
                     
-                var delay_extent = d3.extent(data, function(d) {
-                  if (d['arr_flights'] == 0) {
-                    return 0;
-                  }
-                  else {
-                    return d['arr_del15']/d['arr_flights'];
-                  }
+
+                var delay_extent = d3.extent(nested_filt.values, function(d) {
+                    return d.values['arr_del15_pct'];
                 })
+
                 var delay_scale = d3.scale.linear()
                                     .range([ch_height-ch_margin, ch_margin])
                                     .domain(delay_extent);
                 var delay_axis = d3.svg.axis()
                                    .scale(delay_scale)
                                    .orient('left');
-
                 d3.select('.chart')
                   .append('g')
                   .attr('class', 'x axis')
@@ -623,36 +722,63 @@
                   .attr('transform', 'translate(' + ch_margin + ')')
                   .call(delay_axis);
 
-                d3.select('.chart').selectAll('circle')
-                  .attr('cx', function(d) {
-                    if (d['carrier'] === carrier) {
-                      return time_scale(d['year']);
-                    }
-                  })
-                  .attr('cy', function(d) {
-                    // debugger;
-                    if (d['carrier'] === carrier) {
-                      if (d['arr_flights'] == 0) {
-                        return 0;
-                      }
-                      else {
-                        return delay_scale(d['arr_del15']/d['arr_flights']);
-                      }
-                    }
-                  })
-                  .attr('r', function(d) {
-                    if (d['carrier'] === carrier) {
-                      return 5;  
-                    }
-                  })
-                  .attr('fill', function(d) {
-                    if (d['carrier'] === carrier) {
-                      return 'black';
-                    }
-                    // else {
-                    //   return 'blue';
-                    // }
-                  });
+
+                var color = d3.scale.category20b()
+
+                // Draw Circles
+                var circles = d3.select('.chart').selectAll('circle')
+                  .data(nested_filt.values)
+                  .enter()
+                  .append('circle')
+
+                // var duration = 1000;
+                // var interval = Math.round(duration/nested_filt.values.length);
+                circles.transition()
+                        .delay(1000)
+                        .ease('linear')
+                        .attr('cx', function(d) {
+                            return time_scale(d['key']);
+                        })
+                        .attr('cy', function(d) {
+                            // debugger;
+                            return delay_scale(d.values['arr_del15_pct']);
+                        })
+                        .attr('fill',function(d, i) {
+                            // debugger;
+                            airport = d.values['airport'];
+                            return document.getElementById(airport)
+                                            .getAttribute('fill')
+                        })
+                        .attr('r',5)
+
+                
+                airport = nested_filt.key
+                line_color = document.getElementById(airport).getAttribute('fill')
+
+                // Draw lines to connect circles
+                var valueline = d3.svg.line()
+                    .x(function(d) {
+                        return time_scale(d['key']);
+                    })
+                    .y(function(d) {
+                        return delay_scale(d.values['arr_del15_pct']);
+                    });
+
+                path = d3.select('.chart')
+                    .append('path')
+                    .attr('class', 'line')
+                    .attr('d', valueline(nested_filt.values))
+                    .style('fill','none')
+                    .style('stroke', line_color);
+
+                var totalLength = path.node().getTotalLength()
+
+                path.attr('stroke-dasharray', totalLength + " " + totalLength)
+                    .attr('stroke-dashoffset', totalLength)
+                    .transition()
+                    .duration(1000)
+                    .ease('linear')
+                    .attr('stroke-dashoffset', 0);
               }
 
               d3.csv('airline_delay_loc.csv', plot_points_chart);
