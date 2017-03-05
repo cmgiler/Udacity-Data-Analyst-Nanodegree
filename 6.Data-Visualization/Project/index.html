@@ -470,6 +470,9 @@
     <script src="assets/js/bootstrap-notify.js"></script>
 
     <script type="text/javascript">  
+        Element.prototype.getElementById = function(id) {
+            return document.getElementById(id);
+        }
 
         function draw(data) {
             "use_strict";
@@ -675,12 +678,11 @@
                 })
 
                 nested_filt = nested.filter(function(d) {
-                        return d['key'] == 'DL';
+                        return d['key'] == carrier;
                     })[0]
-                    .values.filter(function(d) {
-                        return d['key'] == 'SEA';
-                    })[0];
-
+                    // .values.filter(function(d) {
+                    //     return d['key'] == 'SEA';
+                    // })[0];
 
                 // d3.select('.chart')
                 //   .selectAll('circle')
@@ -688,9 +690,16 @@
                 //   .enter()
                 //   .append('circle');
                 
-                var time_extent = d3.extent(nested_filt.values, function(d) {
-                    return d['key'];
-                })
+                var all_x = []
+                var all_y = []
+                nested_filt.values.forEach(function(item) {
+                    item.values.forEach(function(item2) {
+                        all_x = all_x.concat(item2.key);
+                        all_y = all_y.concat(item2.values['arr_del15_pct'])
+                    });
+                });
+
+                var time_extent = d3.extent(all_x)
 
                 var time_scale = d3.time.scale()
                                         .range([ch_margin, ch_width-ch_margin])
@@ -700,9 +709,7 @@
                                   .ticks(d3.time.years, 1);
                     
 
-                var delay_extent = d3.extent(nested_filt.values, function(d) {
-                    return d.values['arr_del15_pct'];
-                })
+                var delay_extent = d3.extent(all_y)
 
                 var delay_scale = d3.scale.linear()
                                     .range([ch_height-ch_margin, ch_margin])
@@ -722,61 +729,91 @@
                   .attr('transform', 'translate(' + ch_margin + ')')
                   .call(delay_axis);
 
+                data_plot = nested_filt.values.map(function(d) {
+                    return {
+                        key: d.key,
+                        points: d.values.map(function(l, i) {
+                            return {
+                                x: l.key,
+                                y: l.values['arr_del15_pct'],
+                                carrier: l.values['carrier'],
+                                airport: l.values['airport']
+                            };
+                        })
+                    };
+                });
 
-                var color = d3.scale.category20b()
+                // debugger;
 
                 // Draw Circles
-                var circles = d3.select('.chart').selectAll('circle')
-                  .data(nested_filt.values)
+                var circleGroups = d3.select('.chart').selectAll('.scatterPlotGroup')
+                                     .data(data_plot)
+                                     .enter()
+                                     .append('g')
+                                     .attr('class', 'scatterPlotGroup')
+                                     .attr('id', function(d) {
+                                        return d.key;
+                                     });
+
+                var circles = circleGroups.selectAll('circle')
+                  .data(function(d) {
+                    return d.points;
+                  })
                   .enter()
                   .append('circle')
-
                 // var duration = 1000;
                 // var interval = Math.round(duration/nested_filt.values.length);
-                circles.transition()
-                        .delay(1000)
+                circles
+                        .transition()
+                        .delay(4000)
                         .ease('linear')
                         .attr('cx', function(d) {
-                            return time_scale(d['key']);
+                            return time_scale(d['x']);
                         })
                         .attr('cy', function(d) {
-                            // debugger;
-                            return delay_scale(d.values['arr_del15_pct']);
+                            return delay_scale(d['y']);
                         })
                         .attr('fill',function(d, i) {
-                            // debugger;
-                            airport = d.values['airport'];
-                            return document.getElementById(airport)
+                            var airport_cur = d['airport'];
+                            return document.getElementById('plot-map')
+                                            .getElementById(airport_cur)
                                             .getAttribute('fill')
                         })
-                        .attr('r',5)
-
-                
-                airport = nested_filt.key
-                line_color = document.getElementById(airport).getAttribute('fill')
+                        .attr('r',5);
 
                 // Draw lines to connect circles
                 var valueline = d3.svg.line()
                     .x(function(d) {
-                        return time_scale(d['key']);
+                        return time_scale(d['x']);
                     })
                     .y(function(d) {
-                        return delay_scale(d.values['arr_del15_pct']);
+                        return delay_scale(d['y']);
                     });
 
-                path = d3.select('.chart')
+                path = d3.select('.chart').selectAll('.scatterPlotGroup')
+                    .data(data_plot)
                     .append('path')
                     .attr('class', 'line')
-                    .attr('d', valueline(nested_filt.values))
+                    .attr('d', valueline)
+                    .attr('d', function(d) {return valueline(d.points);})
                     .style('fill','none')
-                    .style('stroke', line_color);
+                    .style('stroke', function(d) {
+                        return document.getElementById('plot-map')
+                                        .getElementById(d.key)
+                                        .getAttribute('fill');
+                    })
+                    .style('stroke-width','3px');
 
-                var totalLength = path.node().getTotalLength()
+                
 
-                path.attr('stroke-dasharray', totalLength + " " + totalLength)
-                    .attr('stroke-dashoffset', totalLength)
+                path.attr('stroke-dasharray', function(d, i) {
+                        return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
+                    })
+                    .attr('stroke-dashoffset', function(d, i) {
+                        return path[0][i].getTotalLength();
+                    })
                     .transition()
-                    .duration(1000)
+                    .duration(4000)
                     .ease('linear')
                     .attr('stroke-dashoffset', 0);
               }
