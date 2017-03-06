@@ -36,11 +36,12 @@
             stroke: black;
             stroke-width: 1px;
         }
-        
+        /*
         .bubble circle:hover {
             stroke-width: 2px;
             cursor: pointer;
-        }
+        }*/
+
     </style>
     
 </head>
@@ -200,9 +201,13 @@
                         <h1 class="title">Analysis of Flight Data in United States</h1>
                         <h4 class="category">Years 2003 to 2016</h4>
                     </div>
-
                 </div>
                 <div class="row">
+                    <div class="col-md-1">
+                        <div class="stats-map">
+
+                        </div>
+                    </div>
                     <div class="col-md-4">
                         <div class="card">
                             <div class="header">
@@ -221,19 +226,14 @@
 -->
                                     </div>
                                     <hr>
-                                    <div class="stats">
-                                        <button class="btn-primary">American Airlines</button>
-                                        <button class="btn-link">Delta</button>
-                                        <button class="btn-primary">Southwest</button>
-                                        <button class="btn-primary">United Air</button>
-                                        <button class="btn-primary">Virgin America</button>
-                                    </div>
+                                    <!-- <div class="stats-map">
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-7">
                         <div class="card">
                             <div class="header">
                                 <h4 class="title">Percentage of Flights Delayed</h4>
@@ -250,20 +250,15 @@
 -->
                                     </div>
                                     <hr>
-                                    <div class="stats">
-                                        <button class="btn-link">All Flight Delays</button>
-                                        <button class="btn-primary">Security Delays</button>
-                                        <button class="btn-primary">Carrier Delays</button>
-                                        <button class="btn-primary">Weather Delays</button>
-                                        <button class="btn-primary">NAS Delays</button>
-                                        <button class="btn-primary">Late Aircraft Delays</button>
-                                        
+                                    <div class="stats-line">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                
 
 <!--
                 <div class="row">
@@ -469,6 +464,9 @@
     <!--  Notifications Plugin    -->
     <script src="assets/js/bootstrap-notify.js"></script>
 
+    <!-- D3 tooltips -->
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
     <script type="text/javascript">  
         Element.prototype.getElementById = function(id) {
             return document.getElementById(id);
@@ -484,6 +482,7 @@
             var map_width = element.clientWidth
             var map_height = element.clientHeight
             var carrier = 'DL';
+            var metric = 'arr_del15_pct';
 
             var svg_map = d3.select('#plot-map')
                             .append('svg')
@@ -491,6 +490,102 @@
                             .attr('height', map_height)
                             .append('g')
                             .attr('class', 'map');
+
+            var metric_options = {
+                'arr_del15_pct' : 'All Flight Delays',
+                'arr_cancelled_pct' : 'Flights Cancelled',
+                'carrier_delay_pct' : 'Carrier Delays',
+                'late_aircraft_delay_pct' : 'Late Aircraft Delays',
+                'nas_delay_pct' : 'NAS Delays',
+                'security_delay_pct' : 'Security Delays',
+                'weather_delay_pct' : 'Weather Delays'
+            };
+            
+            var carrier_options = {
+                'AA' : 'American Airlines',
+                'AS' : 'Alaska Airlines',
+                'B6' : 'JetBlue Airways',
+                'DL' : 'Delta Airlines',
+                'F9' : 'Frontier Airlines',
+                'HA' : 'Hawaiian Airlines',                
+                'HP' : 'America West Airlines',
+                'NW' : 'Northwest Airlines',
+                'US' : 'US Airways',
+                'VX' : 'Virgin America',
+                'WN' : 'Southwest Airlines',
+
+            }
+
+
+            // Create Event Handlers for mouse
+            function handleMouseOver(d, i) {  // Add interactivity
+
+                // Use D3 to select element, change color and size
+                d3.select(this).attr({
+                  r: this.getAttribute('r') * 1.2
+                });
+
+                selected_airport = this.id;
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('stroke-opacity', function(d) {
+                        if (d.key != selected_airport) {
+                            return 0.2;
+                        };
+                    })
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('visibility', function(d) {
+                        if (d.airport != selected_airport) {
+                            return 'hidden';
+                        }
+                    })
+
+                // Specify where to put label of text
+                svg_map.append("text").attr({
+                   id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
+                    x: function() { return d.values.x - 30; },
+                    y: function() { return d.values.y - 15; },
+                })
+                .text(function() {
+                  return d.values.airport;  // Value of the text
+                })
+            }
+
+            function handleMouseOut(d, i) {
+                // Use D3 to select element, change color back to normal
+                d3.select(this).attr({
+                  r: this.getAttribute('r') / 1.2
+                });
+
+                // Select text by id and then remove
+                d3.select("#map_tooltip").remove();  // Remove text location
+
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('stroke-opacity', function(d) {
+                        return 1;
+                    });
+
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('visibility', function(d) {
+                        return 'visible';
+                    });
+            }
+
             // Creating map
             var projection = d3.geo.albersUsa()
                                     .scale(map_width-map_margin)
@@ -510,7 +605,7 @@
             function plot_points_map(data) {
               //function for aggregating airport names based on airline selection
               // draw circles logic
-              var nested = d3.nest()
+                var nested = d3.nest()
                               .key(function(d) {
                                 return d['carrier'];
                               })
@@ -522,9 +617,9 @@
                                 var coords = leaves.map(function(d) {
                                   return projection([+d.long, +d.lat]);
                                 })
-
                                 return {
                                   'airport' : leaves[0].airport,
+                                  'airport_name' : leaves[0].airport_name,
                                   'x' : coords[0][0],
                                   'y' : coords[0][1]
                                 };
@@ -532,17 +627,17 @@
                               })
                               .entries(data);
 
-              var carriers = d3.set();
-              for (var i = 0; i < nested.length; i++) {
+                var carriers = d3.set();
+                for (var i = 0; i < nested.length; i++) {
                 carriers.add(nested[i].key);
                   // break
-              }
-              carriers = carriers.values()
-              var nested_filt = nested.filter(function(d) { return d['key'] === carrier})[0];
-              
-              var color = d3.scale.category20b()
-              
-              svg_map.append('g')
+                }
+                carriers = carriers.values()
+                var nested_filt = nested.filter(function(d) { return d['key'] === carrier})[0];
+
+                var color = d3.scale.category20b()
+
+                svg_map.append('g')
                   .attr('class','bubble')
                   .selectAll('circle')
                   .data(nested_filt.values)
@@ -552,10 +647,10 @@
                   .attr('cy', function(d) { return d.values['y']; })
                   .attr('id', function(d) { return d.key;})
                   .attr('fill', function(d, i) { return color(d.key); })
-                  .attr('r', 7);
-
-
-            };        
+                  .attr('r', 7)
+                  .on('mouseover', handleMouseOver)
+                  .on('mouseout', handleMouseOut)
+                };        
 
             //Draw points on map
             d3.csv('airline_delay_loc.csv', plot_points_map);
@@ -582,7 +677,7 @@
 
             function plot_points_chart(data) {
                 
-
+                
                 function agg_year(leaves) {
                     var arr_flights_sum = d3.sum(leaves, function(d) {
                         return d['arr_flights'];
@@ -663,19 +758,7 @@
                                 .rollup(agg_year)
                                 .entries(data);
                 // debugger;
-                var max_flight = d3.max(nested, function(d) {
-                    return d3.max(d.values, function(d) {
-                        return d3.max(d.values, function(d) {
-                            arr_flights_sum = d.values['arr_flights_sum'];
-                            arr_del15_sum = d.values['arr_del15_sum'];
-                            if (arr_flights_sum == 0)
-                                return 0;
-                            else
-                                return d.values['arr_del15_sum']/d.values['arr_flights_sum'];
-                    });
-
-                    })
-                })
+                
 
                 nested_filt = nested.filter(function(d) {
                         return d['key'] == carrier;
@@ -695,7 +778,7 @@
                 nested_filt.values.forEach(function(item) {
                     item.values.forEach(function(item2) {
                         all_x = all_x.concat(item2.key);
-                        all_y = all_y.concat(item2.values['arr_del15_pct'])
+                        all_y = all_y.concat(item2.values[metric])
                     });
                 });
 
@@ -735,7 +818,7 @@
                         points: d.values.map(function(l, i) {
                             return {
                                 x: l.key,
-                                y: l.values['arr_del15_pct'],
+                                y: l.values[metric],
                                 carrier: l.values['carrier'],
                                 airport: l.values['airport']
                             };
@@ -763,10 +846,10 @@
                   .append('circle')
                 // var duration = 1000;
                 // var interval = Math.round(duration/nested_filt.values.length);
-                circles
-                        .transition()
-                        .delay(4000)
+                circles.transition()
+                        .delay(500)
                         .ease('linear')
+                        .duration(500)
                         .attr('cx', function(d) {
                             return time_scale(d['x']);
                         })
@@ -813,9 +896,85 @@
                         return path[0][i].getTotalLength();
                     })
                     .transition()
-                    .duration(4000)
+                    .duration(500)
                     .ease('linear')
                     .attr('stroke-dashoffset', 0);
+
+                
+                // Create buttons for carriers and metrics
+                carrier_data = [];
+                for (var key in carrier_options) {
+                    carrier_data.push(key);
+                }
+                metric_data = [];
+                for (var key in metric_options) {
+                    metric_data.push(key);
+                }
+
+                var carrier_buttons = d3.select('.stats-map')
+                                        .append('div')
+                                        .attr('class', 'carrier_buttons')
+                                        .selectAll('div')
+                                        .data(carrier_data)
+                                        .enter()
+                                        .append('button')
+                                        .attr('class', 'btn-primary')
+                                        .attr('id', function(d) {
+                                            return d;
+                                        })
+                                        .text(function(d, i) {
+                                            return d;
+                                        });
+                var metric_buttons = d3.select('.stats-line')
+                                .append('div')
+                                .attr('class', 'metric_buttons')
+                                .selectAll('div')
+                                .data(metric_data)
+                                .enter()
+                                .append('button')
+                                .attr('class', 'btn-primary')
+                                .attr('id', function(d) {
+                                    return d;
+                                })
+                                .text(function(d, i) {
+                                    return d;
+                                });
+
+                for (var i = 0; i < carrier_buttons[0].length; i++) {
+                    carrier_buttons[0][i].innerHTML = carrier_options[carrier_buttons[0][i].id];
+                }
+                for (var i = 0; i < metric_buttons[0].length; i++) {
+                    // debugger;
+                    metric_buttons[0][i].innerHTML = metric_options[metric_buttons[0][i].id];
+                }
+
+
+
+                carrier_buttons.on('click', function(d) {
+                    d3.select('.carrier_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', function(d, i) {
+                            return !d3.select(this).classed('btn-primary');
+                        })
+                    d3.select(this)
+                        .classed('btn-link', d3.select(this).classed('btn-primary'));
+                })
+
+                metric_buttons.on('click', function(d) {
+                    d3.select('.metric_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', function(d, i) {
+                            return !d3.select(this).classed('btn-primary');
+                        })
+                    d3.select(this)
+                        .classed('btn-link', d3.select(this).classed('btn-primary'));
+                })
+
+                // <button class="btn-link">All Flight Delays</button>
               }
 
               d3.csv('airline_delay_loc.csv', plot_points_chart);
