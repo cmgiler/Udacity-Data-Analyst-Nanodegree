@@ -626,53 +626,22 @@
 
 
             function plot_points_map(data) {
-              //function for aggregating airport names based on airline selection
+              
+                
+            };        
+
+            //Draw points on map
+            // d3.csv('airline_delay_loc.csv', plot_points_map);
+
+
+            function plot_points_chart(data) {
+
+                //function for aggregating airport names based on airline selection
               // draw circles logic
               // Create buttons for carriers and metrics
-                carrier_data = [];
-                for (var key in carrier_options) {
-                    carrier_data.push(key);
-                }
-                var carrier_buttons = d3.select('.stats-map')
-                                        .append('div')
-                                        .attr('class', 'carrier_buttons')
-                                        .selectAll('div')
-                                        .data(carrier_data)
-                                        .enter()
-                                        .append('button')
-                                        .attr('class', function(d, i) {
-                                            if (i === 0)
-                                                return 'btn-link';
-                                            else
-                                                return 'btn-primary';
-                                        })
-                                        .attr('id', function(d) {
-                                            return d;
-                                        })
-                                        .text(function(d, i) {
-                                            return d;
-                                        });
+                
 
-                for (var i = 0; i < carrier_buttons[0].length; i++) {
-                    carrier_buttons[0][i].innerHTML = carrier_options[carrier_buttons[0][i].id];
-                }
-
-                // Initialize Buttons
-
-
-                carrier_buttons.on('click', function(d) {
-                    d3.select('.carrier_buttons')
-                        .selectAll('button')
-                        // .transition()
-                        // .duration(500)
-                        .classed('btn-link', false)
-                        .classed('btn-primary', true);
-                    d3.select(this)
-                        .classed('btn-link', true);
-                    update_map(d);
-                })
-
-                var nested = d3.nest()
+                var nested_map = d3.nest()
                               .key(function(d) {
                                 return d['carrier'];
                               })
@@ -696,12 +665,12 @@
 
                 function update_map(carrier) {
                     var carriers = d3.set();
-                    for (var i = 0; i < nested.length; i++) {
-                        carriers.add(nested[i].key);
+                    for (var i = 0; i < nested_map.length; i++) {
+                        carriers.add(nested_map[i].key);
                       // break
                     }
                     carriers = carriers.values()
-                    var nested_filt = nested.filter(function(d) { return d['key'] === carrier})[0];
+                    var nested_filt = nested_map.filter(function(d) { return d['key'] === carrier})[0];
 
                     var color = d3.scale.category20b()
 
@@ -721,62 +690,11 @@
                       .attr('r', 7)
                       .on('mouseover', handleMouseOver)
                       .on('mouseout', handleMouseOut)
-                  };
-
-                update_map(carrier);
+                };    
 
                 
-            };        
 
-            //Draw points on map
-            d3.csv('airline_delay_loc.csv', plot_points_map);
-
-
-            function plot_points_chart(data) {
-
-                metric_data = [];
-                for (var key in metric_options) {
-                    metric_data.push(key);
-                }
-                
-                var metric_buttons = d3.select('.stats-line')
-                                .append('div')
-                                .attr('class', 'metric_buttons')
-                                .selectAll('div')
-                                .data(metric_data)
-                                .enter()
-                                .append('button')
-                                .attr('class', function(d, i) {
-                                    if (i == 0)
-                                        return 'btn-link';
-                                    else
-                                        return 'btn-primary';
-                                })
-                                .attr('id', function(d) {
-                                    return d;
-                                })
-                                .text(function(d, i) {
-                                    return d;
-                                });
-
-                
-                for (var i = 0; i < metric_buttons[0].length; i++) {
-                    // debugger;
-                    metric_buttons[0][i].innerHTML = metric_options[metric_buttons[0][i].id];
-                }
-
-
-                metric_buttons.on('click', function(d) {
-                    d3.select('.metric_buttons')
-                        .selectAll('button')
-                        // .transition()
-                        // .duration(500)
-                        .classed('btn-link', false)
-                        .classed('btn-primary', true);
-                    d3.select(this)
-                        .classed('btn-link', true);
-                })
-                
+                //Plotting for charts
                 
                 function agg_year(leaves) {
                     var arr_flights_sum = d3.sum(leaves, function(d) {
@@ -844,8 +762,11 @@
                         'late_aircraft_delay_pct' : late_aircraft_delay_pct
                     };
                 }
+                // debugger;
+                
+                function update_chart(carrier, metric) {
 
-                var nested = d3.nest()
+                    var nested_chart = d3.nest()
                                 .key(function(d) {
                                     return d['carrier'];
                                 })
@@ -857,149 +778,236 @@
                                 })
                                 .rollup(agg_year)
                                 .entries(data);
-                // debugger;
-                
 
-                nested_filt = nested.filter(function(d) {
+                    nested_filt = nested_chart.filter(function(d) {
                         return d['key'] == carrier;
                     })[0]
-                    // .values.filter(function(d) {
-                    //     return d['key'] == 'SEA';
-                    // })[0];
-
-                // d3.select('.chart')
-                //   .selectAll('circle')
-                //   .data(nested_filt.values)
-                //   .enter()
-                //   .append('circle');
-                
-                var all_x = []
-                var all_y = []
-                nested_filt.values.forEach(function(item) {
-                    item.values.forEach(function(item2) {
-                        all_x = all_x.concat(item2.key);
-                        all_y = all_y.concat(item2.values[metric])
+                    var all_x = []
+                    var all_y = []
+                    nested_filt.values.forEach(function(item) {
+                        item.values.forEach(function(item2) {
+                            all_x = all_x.concat(item2.key);
+                            all_y = all_y.concat(item2.values[metric])
+                        });
                     });
-                });
 
-                var time_extent = d3.extent(all_x)
+                    var time_extent = d3.extent(all_x)
 
-                var time_scale = d3.time.scale()
-                                        .range([ch_margin, ch_width-ch_margin])
-                                        .domain(time_extent)
-                var time_axis = d3.svg.axis()
-                                  .scale(time_scale)
-                                  .ticks(d3.time.years, 1);
+                    var time_scale = d3.time.scale()
+                                            .range([ch_margin, ch_width-ch_margin])
+                                            .domain(time_extent)
+                    var time_axis = d3.svg.axis()
+                                      .scale(time_scale)
+                                      .ticks(d3.time.years, 1);
+                        
+
+                    var delay_extent = d3.extent(all_y)
+
+                    var delay_scale = d3.scale.linear()
+                                        .range([ch_height-ch_margin, ch_margin])
+                                        .domain(delay_extent);
+                    var delay_axis = d3.svg.axis()
+                                       .scale(delay_scale)
+                                       .orient('left');
+
+                    debugger;
+                    d3.select('.chart').selectAll('#y axis')
+                    d3.select('.chart')
+                      .append('g')
+                      .attr('class', 'x axis')
+                      .attr('transform', 'translate(0,' + ch_height + ')')
+                      .call(time_axis);
+
+                    d3.select('.chart')
+                      .append('g')
+                      .attr('class', 'y axis')
+                      .attr('transform', 'translate(' + ch_margin + ')')
+                      .call(delay_axis);
+
+                    data_plot = nested_filt.values.map(function(d) {
+                        return {
+                            key: d.key,
+                            points: d.values.map(function(l, i) {
+                                return {
+                                    x: l.key,
+                                    y: l.values[metric],
+                                    carrier: l.values['carrier'],
+                                    airport: l.values['airport'],
+                                    metric_name: metric
+                                };
+                            })
+                        };
+                    });
+
+                    d3.select('.chart').selectAll('circle').data(data_plot, function(d){return d['key'];}).exit().remove()
+                    d3.select('.chart').selectAll('path').data(data, function(d){return d['key'];}).exit().remove()
+
+                    // Draw Circles
+                    var circleGroups = d3.select('.chart').selectAll('.scatterPlotGroup')
+                                         .data(data_plot)
+                                         .enter()
+                                         .append('g')
+                                         .attr('class', 'scatterPlotGroup')
+                                         .attr('id', function(d) {
+                                            return d.key;
+                                         });
+
+                    var circles = circleGroups.selectAll('circle')
+                      .data(function(d) {
+                        return d.points;
+                      })
+                      .enter()
+                      .append('circle')
+                    // var duration = 1000;
+                    // var interval = Math.round(duration/nested_filt.values.length);
                     
+                    circles.transition()
+                            .delay(500)
+                            .ease('linear')
+                            .duration(500)
+                            .attr('cx', function(d) {
+                                return time_scale(d['x']);
+                            })
+                            .attr('cy', function(d) {
+                                return delay_scale(d['y']);
+                            })
+                            .attr('fill',function(d, i) {
+                                var airport_cur = d['airport'];
+                                // debugger;
+                                return document.getElementById('plot-map')
+                                                .getElementById(airport_cur)
+                                                .getAttribute('fill')
+                            })
+                            .attr('r',5);
 
-                var delay_extent = d3.extent(all_y)
-
-                var delay_scale = d3.scale.linear()
-                                    .range([ch_height-ch_margin, ch_margin])
-                                    .domain(delay_extent);
-                var delay_axis = d3.svg.axis()
-                                   .scale(delay_scale)
-                                   .orient('left');
-                d3.select('.chart')
-                  .append('g')
-                  .attr('class', 'x axis')
-                  .attr('transform', 'translate(0,' + ch_height + ')')
-                  .call(time_axis);
-
-                d3.select('.chart')
-                  .append('g')
-                  .attr('class', 'y axis')
-                  .attr('transform', 'translate(' + ch_margin + ')')
-                  .call(delay_axis);
-
-                data_plot = nested_filt.values.map(function(d) {
-                    return {
-                        key: d.key,
-                        points: d.values.map(function(l, i) {
-                            return {
-                                x: l.key,
-                                y: l.values[metric],
-                                carrier: l.values['carrier'],
-                                airport: l.values['airport']
-                            };
-                        })
-                    };
-                });
-
-                // debugger;
-
-                // Draw Circles
-                var circleGroups = d3.select('.chart').selectAll('.scatterPlotGroup')
-                                     .data(data_plot)
-                                     .enter()
-                                     .append('g')
-                                     .attr('class', 'scatterPlotGroup')
-                                     .attr('id', function(d) {
-                                        return d.key;
-                                     });
-
-                var circles = circleGroups.selectAll('circle')
-                  .data(function(d) {
-                    return d.points;
-                  })
-                  .enter()
-                  .append('circle')
-                // var duration = 1000;
-                // var interval = Math.round(duration/nested_filt.values.length);
-                
-                circles.transition()
-                        .delay(500)
-                        .ease('linear')
-                        .duration(500)
-                        .attr('cx', function(d) {
+                    // Draw lines to connect circles
+                    var valueline = d3.svg.line()
+                        .x(function(d) {
                             return time_scale(d['x']);
                         })
-                        .attr('cy', function(d) {
+                        .y(function(d) {
                             return delay_scale(d['y']);
-                        })
-                        .attr('fill',function(d, i) {
-                            var airport_cur = d['airport'];
+                        });
+
+                    path = d3.select('.chart').selectAll('.scatterPlotGroup')
+                        .data(data_plot)
+                        .append('path')
+                        .attr('class', 'line')
+                        .attr('d', valueline)
+                        .attr('d', function(d) {return valueline(d.points);})
+                        .style('fill','none')
+                        .style('stroke', function(d) {
                             return document.getElementById('plot-map')
-                                            .getElementById(airport_cur)
-                                            .getAttribute('fill')
+                                            .getElementById(d.key)
+                                            .getAttribute('fill');
                         })
-                        .attr('r',5);
+                        .style('stroke-width','3px');
 
-                // Draw lines to connect circles
-                var valueline = d3.svg.line()
-                    .x(function(d) {
-                        return time_scale(d['x']);
-                    })
-                    .y(function(d) {
-                        return delay_scale(d['y']);
-                    });
+                    
 
-                path = d3.select('.chart').selectAll('.scatterPlotGroup')
-                    .data(data_plot)
-                    .append('path')
-                    .attr('class', 'line')
-                    .attr('d', valueline)
-                    .attr('d', function(d) {return valueline(d.points);})
-                    .style('fill','none')
-                    .style('stroke', function(d) {
-                        return document.getElementById('plot-map')
-                                        .getElementById(d.key)
-                                        .getAttribute('fill');
-                    })
-                    .style('stroke-width','3px');
-
+                    path.attr('stroke-dasharray', function(d, i) {
+                            return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
+                        })
+                        .attr('stroke-dashoffset', function(d, i) {
+                            return path[0][i].getTotalLength();
+                        })
+                        .transition()
+                        .duration(500)
+                        .ease('linear')
+                        .attr('stroke-dashoffset', 0);
+                }
+                
+                update_map(carrier);
+                update_chart(carrier,metric);
                 
 
-                path.attr('stroke-dasharray', function(d, i) {
-                        return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
-                    })
-                    .attr('stroke-dashoffset', function(d, i) {
-                        return path[0][i].getTotalLength();
-                    })
-                    .transition()
-                    .duration(500)
-                    .ease('linear')
-                    .attr('stroke-dashoffset', 0);
+                carrier_data = [];
+                for (var key in carrier_options) {
+                    carrier_data.push(key);
+                }
+                var carrier_buttons = d3.select('.stats-map')
+                                        .append('div')
+                                        .attr('class', 'carrier_buttons')
+                                        .selectAll('div')
+                                        .data(carrier_data)
+                                        .enter()
+                                        .append('button')
+                                        .attr('class', function(d, i) {
+                                            if (i === 0)
+                                                return 'btn-link';
+                                            else
+                                                return 'btn-primary';
+                                        })
+                                        .attr('id', function(d) {
+                                            return d;
+                                        })
+                                        .text(function(d, i) {
+                                            return d;
+                                        });
+
+                for (var i = 0; i < carrier_buttons[0].length; i++) {
+                    carrier_buttons[0][i].innerHTML = carrier_options[carrier_buttons[0][i].id];
+                }
+
+                // Initialize Buttons
+
+
+                carrier_buttons.on('click', function(d) {
+                    d3.select('.carrier_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', false)
+                        .classed('btn-primary', true);
+                    d3.select(this)
+                        .classed('btn-link', true);
+                    update_map(d);
+                    cur_metric = document.getElementsByClassName('btn-link')[1].id;
+                    update_chart(d, cur_metric);
+                })
+
+                metric_data = [];
+                for (var key in metric_options) {
+                    metric_data.push(key);
+                }
+                
+                var metric_buttons = d3.select('.stats-line')
+                                .append('div')
+                                .attr('class', 'metric_buttons')
+                                .selectAll('div')
+                                .data(metric_data)
+                                .enter()
+                                .append('button')
+                                .attr('class', function(d, i) {
+                                    if (i == 0)
+                                        return 'btn-link';
+                                    else
+                                        return 'btn-primary';
+                                })
+                                .attr('id', function(d) {
+                                    return d;
+                                })
+                                .text(function(d, i) {
+                                    return d;
+                                });
+
+                
+                for (var i = 0; i < metric_buttons[0].length; i++) {
+                    // debugger;
+                    metric_buttons[0][i].innerHTML = metric_options[metric_buttons[0][i].id];
+                }
+
+
+                metric_buttons.on('click', function(d) {
+                    d3.select('.metric_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', false)
+                        .classed('btn-primary', true);
+                    d3.select(this)
+                        .classed('btn-link', true);
+                })
 
                 
                 
