@@ -594,6 +594,9 @@
                 .text(function() {
                   return d.values.airport;  // Value of the text
                 })
+
+                document.getElementById('active-hubs').innerHTML = 
+                        d.values.airport_name + ' (' + this.id + ')';
             }
 
             function handleMouseOut(d, i) {
@@ -622,6 +625,9 @@
                     .style('visibility', function(d) {
                         return 'visible';
                     });
+                
+                document.getElementById('active-hubs').innerHTML = 
+                        'For ' + d.values.carrier_name + ' Hubs';
             }
 
             // Creating map
@@ -957,7 +963,7 @@
                     document.getElementById('active-metric').innerHTML = 
                             'Percentage of ' + metric_options[metric];
                     document.getElementById('active-hubs').innerHTML = 
-                            'By ' + nested_filt.values[0].values[0].values.carrier_name + ' Hub';
+                            'For ' + nested_filt.values[0].values[0].values.carrier_name + ' Hubs';
 
                 }
 
