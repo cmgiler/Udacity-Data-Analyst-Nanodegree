@@ -42,6 +42,17 @@
         .main-panel {
             background: rgba(0, 0, 0, .1);
         }
+
+        .y.axis line {
+            fill: none;
+            stroke: black;
+            opacity: .25;
+        }
+
+        .x.axis line {
+            fill: none;
+            stroke: black;
+        }
         /*
         .bubble circle:hover {
             stroke-width: 2px;
@@ -505,12 +516,12 @@
                             .attr('class', 'map');
 
             //Initialize Chart
-            var ch_margin = 50
+            var ch_margin = 65
     //            width = total_width/2.5 - margin,
     //            height = 600 - margin;
             ch_element = document.getElementById('plot-line')
-            var ch_width = ch_element.offsetWidth
-            var ch_height = ch_element.offsetHeight
+            var ch_width = ch_element.offsetWidth+ch_margin
+            var ch_height = ch_element.offsetHeight-ch_margin/2
 
     //        d3.select('#plot-line')
     //          .append('h2')
@@ -528,8 +539,7 @@
                 'B6' : 'JetBlue Airways',
                 'DL' : 'Delta Airlines',
                 'F9' : 'Frontier Airlines',
-                'HA' : 'Hawaiian Airlines',                
-                'HP' : 'America West Airlines',
+                'HA' : 'Hawaiian Airlines',
                 'NW' : 'Northwest Airlines',
                 'US' : 'US Airways',
                 'VX' : 'Virgin America',
@@ -537,14 +547,14 @@
             }
 
             var metric_options = {
-                'arr_flights_sum' : 'Total Flights',
                 'arr_del15_pct' : 'All Flight Delays',
                 'arr_cancelled_pct' : 'Flights Cancelled',
                 'carrier_delay_pct' : 'Carrier Delays',
                 'late_aircraft_delay_pct' : 'Late Aircraft Delays',
                 'nas_delay_pct' : 'NAS Delays',
                 'security_delay_pct' : 'Security Delays',
-                'weather_delay_pct' : 'Weather Delays'
+                'weather_delay_pct' : 'Weather Delays',
+                'arr_flights_sum' : 'Total Flights'
             };
             
 
@@ -783,9 +793,11 @@
                 // debugger;
 
                 function initAxis() {
+                    var x1 = new Date("2003").getFullYear()+1;
+                    var x2 = new Date("2003").getFullYear()+1;
                     var x = d3.time.scale()
                                         .range([ch_margin, ch_width-ch_margin])
-                                        .domain(['2003','2016']),
+                                        .domain([x1, x2]),
                         y = d3.scale.linear()
                                         .range([ch_height-ch_margin, ch_margin])
                                         .domain([0,1]),
@@ -795,17 +807,21 @@
                     d3.select('.chart')
                       .append('g')
                       .attr('class', 'x axis')
-                      .attr('transform', 'translate(0,' + ch_height + ')')
+                      .attr('transform', 'translate(0,' + (ch_height-ch_margin) + ')')
                       .call(xAxis);
 
                     d3.select('.chart')
                       .append('g')
                       .attr('class', 'y axis')
-                      .attr('transform', 'translate(' + ch_margin + ')')
+                      .attr('transform', 'translate(' + ch_margin + ',0)')
                       .call(yAxis);
+
+                    d3.select('.chart').append('text').attr('text-anchor', 'middle')
+                                      .attr('transform', 'translate(' + (ch_width/2) + ',' + (ch_height) + ')')
+                                      .text('YEAR')
                 }
                 initAxis();
-                
+
                 function update_chart(carrier, metric) {
                     
                     var metric_options = {
@@ -815,7 +831,8 @@
                         'late_aircraft_delay_pct' : 'Late Aircraft Delays',
                         'nas_delay_pct' : 'NAS Delays',
                         'security_delay_pct' : 'Security Delays',
-                        'weather_delay_pct' : 'Weather Delays'
+                        'weather_delay_pct' : 'Weather Delays',
+                        'arr_flights_sum' : 'Total Flights'
                     };
 
                     var nested_chart = d3.nest()
@@ -845,28 +862,48 @@
                     });
 
                     var time_extent = d3.extent(all_x)
+                    time_extent[0] = new Date(time_extent[0]).getFullYear()+1;
+                    time_extent[1] = new Date(time_extent[1]).getFullYear()+1;
 
                     var time_scale = d3.time.scale()
                                             .range([ch_margin, ch_width-ch_margin])
-                                            .domain(time_extent)
-                    var time_axis = d3.svg.axis()
-                                      .scale(time_scale)
-                                      .ticks(d3.time.years, 1)
-                                      .tickFormat(d3.time.format('%Y'));
-                        
+                                            .domain(time_extent);
 
+                    // var time_axis = d3.svg.axis()
+                    //                   .scale(time_scale)
+                    //                   .ticks(d3.time.years, 1)
+                    //                   .tickFormat(d3.time.format('%Y'));
+                    var time_axis = d3.svg.axis()
+                                          .scale(time_scale)
+                                          .orient('bottom')
+                                          .ticks(time_extent[1]-time_extent[0]+1)
+                                          .outerTickSize(0)
+                                          .tickPadding(10)
+                                          .tickFormat(d3.format('04d'));
+                    
                     var delay_extent = d3.extent(all_y)
                     delay_extent[0] = 0;
+                    delay_extent[1] = delay_extent[1]*1.1;
 
                     var delay_scale = d3.scale.linear()
                                         .range([ch_height-ch_margin, ch_margin])
                                         .domain(delay_extent);
+
                     var delay_axis = d3.svg.axis()
                                        .scale(delay_scale)
-                                       .orient('left');
+                                       .orient('left')
+                                       .ticks(6)
+                                       .innerTickSize(-(ch_width-2*ch_margin))
+                                       .outerTickSize(5)
+                                       .tickPadding(15);
 
-                    d3.select('.chart').selectAll('g.x.axis').call(time_axis);
-                    d3.select('.chart').transition().duration(300).selectAll('g.y.axis').call(delay_axis);
+                    // d3.select('.chart').selectAll('g.x.axis').call(time_axis);
+                    d3.select('.chart').transition().duration(1000).selectAll('g.x.axis').call(time_axis);
+                    d3.select('.chart').selectAll('.x.axis text').attr('transform', function(d) {
+                        return 'translate(' + this.getBBox().height*-2 + ',' + this.getBBox().height  + ')rotate(-30)';
+                    });
+
+                    d3.select('.chart').transition().duration(1500).selectAll('g.y.axis').call(delay_axis);
 
                     data_plot = nested_filt.values.map(function(d) {
                         return {
