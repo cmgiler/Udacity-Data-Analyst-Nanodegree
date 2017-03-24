@@ -594,6 +594,28 @@
                   r: this.getAttribute('r') * 1.2
                 });
 
+                selected_airport = this.id;
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('stroke-opacity', function(d) {
+                        if (d.key != selected_airport) {
+                            return 0.1;
+                        };
+                    })
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('visibility', function(d) {
+                        if (d.airport != selected_airport) {
+                            return 'hidden';
+                        }
+                    })
+
                 // Specify where to put label of text
                 svg_map.append("text").attr({
                    id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
@@ -604,73 +626,8 @@
                   return d.values.airport;  // Value of the text
                 })
 
-                
-            }
-
-            function handleMouseClick(d, i) {
-                if (this.id == "") {
-                    var carrier_options = {
-                        'AA' : 'American Airlines',
-                        'AS' : 'Alaska Airlines',
-                        'B6' : 'JetBlue Airways',
-                        'DL' : 'Delta Airlines',
-                        'F9' : 'Frontier Airlines',
-                        'HA' : 'Hawaiian Airlines',
-                        'NW' : 'Northwest Airlines',
-                        'US' : 'US Airways',
-                        'VX' : 'Virgin America',
-                        'WN' : 'Southwest Airlines'
-                    }
-                    d3.selectAll('.scatterPlotGroup')
-                        .selectAll('path')
-                        .transition()
-                        .ease('linear')
-                        .duration('500')
-                        .style('stroke-opacity', function(d) {
-                            return 1;
-                        });
-
-                    d3.selectAll('.scatterPlotGroup')
-                        .selectAll('circle')
-                        .transition()
-                        .ease('linear')
-                        .duration('500')
-                        .style('visibility', function(d) {
-                            return 'visible';
-                        });
-                    
-                    var cur_carrier = document.getElementsByClassName('btn-link')[0].id;
-                    document.getElementById('active-hubs').innerHTML = 
-                            'For ' + carrier_options[cur_carrier] + ' Hubs';
-                }
-                else {
-                    selected_airport = this.id;
-                    d3.selectAll('.scatterPlotGroup')
-                        .selectAll('path')
-                        .transition()
-                        .ease('linear')
-                        .duration('250')
-                        .style('stroke-opacity', function(d) {
-                            if (d.key != selected_airport) {
-                                return 0.1;
-                            }
-                            else {
-                                return 0.95;
-                            };
-                        })
-                    d3.selectAll('.scatterPlotGroup')
-                        .selectAll('circle')
-                        .transition()
-                        .ease('linear')
-                        .duration('250')
-                        .style('visibility', function(d) {
-                            if (d.airport != selected_airport) {
-                                return 'hidden';
-                            }
-                        })
-                    document.getElementById('active-hubs').innerHTML = 
+                document.getElementById('active-hubs').innerHTML = 
                         d.values.airport_name + ' (' + this.id + ')';
-                }
             }
 
             function handleMouseOut(d, i) {
@@ -682,55 +639,26 @@
                 // Select text by id and then remove
                 d3.select("#map_tooltip").remove();  // Remove text location
 
-            }
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('stroke-opacity', function(d) {
+                        return 1;
+                    });
 
-            function handleMouseOverChart(d, i) {
-
-                var d3Chart = d3.select('#plot-line svg');
-                var dpX1 = this.getAttribute('cx');
-                var dpY1 = this.getAttribute('cy');
-                var dpY2 = document.getElementsByClassName('x axis')[0].getAttribute('y');
-                var dpX2 = document.getElementsByClassName('y axis')[0].getAttribute('x');
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('visibility', function(d) {
+                        return 'visible';
+                    });
                 
-                var myLine_x = d3Chart.append("svg:line")
-                    .attr("class", 'd3-dp-line')
-                    .attr("x1", dpX1)
-                    .attr("y1", dpY1)
-                    .attr("x2", dpX1)
-                    .attr("y2", dpY2)
-                    .style("stroke-dasharray", ("5, 3"))
-                    .style("stroke-opacity", 0.9)
-                    .style("stroke", 'black');
-
-                var myLine_y = d3Chart.append("svg:line")
-                    .attr("class", 'd3-dp-line')
-                    .attr("x1", dpX1)
-                    .attr("y1", dpY1)
-                    .attr("x2", dpX2)
-                    .attr("y2", dpY1)
-                    .style("stroke-dasharray", ("5, 3"))
-                    .style("stroke-opacity", 0.9)
-                    .style("stroke", 'black');
-
-                this.setAttribute('r', this.getAttribute('r')*1.5)
-                // debugger;
-                d3Chart.append("text").attr({
-                   id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
-                    x: this.getAttribute('cx') - 30,
-                    y: this.getAttribute('cy') - 15,
-                })
-                .text(function() {
-                  return "(" + d.x + " , " + Math.round(d.y*1000)/1000 + ")";  // Value of the text
-                })
-            }
-
-            function handleMouseOutChart(d, i) {
-                var d3Chart = d3.select('#plot-line svg');
-                d3Chart.selectAll('.d3-dp-line').remove();
-                this.setAttribute('r', this.getAttribute('r')/1.5)
-
-                // Select text by id and then remove
-                d3.select("#map_tooltip").remove();  // Remove text location
+                document.getElementById('active-hubs').innerHTML = 
+                        'For ' + d.values.carrier_name + ' Hubs';
             }
 
             // Creating map
@@ -745,8 +673,7 @@
                           .attr('d', path)
                           .style('fill', 'rgb(200,200,170)')
                           .style('stroke', 'black')
-                          .style('stroke-width', 1)
-                          .on('click',handleMouseClick);
+                          .style('stroke-width', 1);
 
 
 
@@ -810,7 +737,6 @@
                       .attr('r', 7)
                       .on('mouseover', handleMouseOver)
                       .on('mouseout', handleMouseOut)
-                      .on('click', handleMouseClick);
                 };    
 
                 
@@ -902,14 +828,12 @@
                       .append('g')
                       .attr('class', 'x axis')
                       .attr('transform', 'translate(0,' + (ch_height-ch_margin) + ')')
-                      .attr('y', ch_height-ch_margin)
                       .call(xAxis);
 
                     d3.select('.chart')
                       .append('g')
                       .attr('class', 'y axis')
                       .attr('transform', 'translate(' + ch_margin + ',0)')
-                      .attr('x', ch_margin)
                       .call(yAxis);
 
                     d3.select('.chart').append('text').attr('text-anchor', 'middle')
@@ -1029,48 +953,13 @@
                                          .attr('id', function(d) {
                                             return d.key;
                                          });
-
-                    var valueline = d3.svg.line()
-                        .x(function(d) {
-                            return time_scale(d['x']);
-                        })
-                        .y(function(d) {
-                            return delay_scale(d['y']);
-                        });
-
-                    var path = d3.select('.chart').selectAll('.scatterPlotGroup')
-                        .data(data_plot)
-                        .append('path')
-                        .attr('class', 'line')
-                        .attr('d', valueline)
-                        .attr('d', function(d) {return valueline(d.points);})
-                        .style('fill','none')
-                        .style('stroke', function(d) {
-                            return document.getElementById('plot-map')
-                                            .getElementById(d.key)
-                                            .getAttribute('fill');
-                        })
-                        .style('stroke-width','3px');
-
-                    path.attr('stroke-dasharray', function(d, i) {
-                            return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
-                        })
-                        .attr('stroke-dashoffset', function(d, i) {
-                            return path[0][i].getTotalLength();
-                        })
-                        .transition()
-                        .duration(1000)
-                        .ease('linear')
-                        .attr('stroke-dashoffset', 0);
                     
                     var circles = circleGroups.selectAll('circle')
-                        .data(function(d) {
+                      .data(function(d) {
                         return d.points;
-                        })
-                        .enter()
-                        .append('circle')
-                        .on('mouseover', handleMouseOverChart)
-                        .on('mouseout', handleMouseOutChart);
+                      })
+                      .enter()
+                      .append('circle');
                     
                     circles.transition()
                             .delay(1000)
@@ -1091,11 +980,41 @@
                             })
                             .attr('r',5);
 
-                    
+                    // Draw lines to connect circles
+                    var valueline = d3.svg.line()
+                        .x(function(d) {
+                            return time_scale(d['x']);
+                        })
+                        .y(function(d) {
+                            return delay_scale(d['y']);
+                        });
+
+                    path = d3.select('.chart').selectAll('.scatterPlotGroup')
+                        .data(data_plot)
+                        .append('path')
+                        .attr('class', 'line')
+                        .attr('d', valueline)
+                        .attr('d', function(d) {return valueline(d.points);})
+                        .style('fill','none')
+                        .style('stroke', function(d) {
+                            return document.getElementById('plot-map')
+                                            .getElementById(d.key)
+                                            .getAttribute('fill');
+                        })
+                        .style('stroke-width','3px');
 
                     
 
-                    
+                    path.attr('stroke-dasharray', function(d, i) {
+                            return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
+                        })
+                        .attr('stroke-dashoffset', function(d, i) {
+                            return path[0][i].getTotalLength();
+                        })
+                        .transition()
+                        .duration(1000)
+                        .ease('linear')
+                        .attr('stroke-dashoffset', 0);
 
                     
                     document.getElementById('active-years').innerHTML = 
