@@ -19,7 +19,7 @@
     <!-- <link href="assets/css/animate.min.css" rel="stylesheet"/> -->
 
     <!--  Light Bootstrap Table core CSS    -->
-    <link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
+    <link href="light-bootstrap-dashboard.css" rel="stylesheet"/>
 
 
     <!--  CSS for Demo Purpose, don't include it in your project     -->
@@ -36,11 +36,20 @@
             stroke: black;
             stroke-width: 1px;
         }
-        #map_tooltip span {
-            background-color: white;
+        #map_tooltip {
+            position: absolute;         
+            text-align: center;         
+            width: 50px;                    
+            height: 32px;                   
+            padding: 2px;               
+            font: 12px sans-serif;      
+            background: lightsteelblue; 
+            border: 0px;        
+            border-radius: 8px;         
+            pointer-events: none;
         }
         .main-panel {
-            background: rgba(0, 0, 0, .1);
+            background: rgba(0, 0, 0, .05);
         }
 
         .y.axis line {
@@ -550,6 +559,7 @@
                               .append('svg')
                               .attr('width', ch_width)
                               .attr('height', ch_height)
+                              .on('click', handleMouseClick)
                               .append('g')
                               .attr('class','chart');
 
@@ -595,20 +605,19 @@
                 });
 
                 // Specify where to put label of text
-                svg_map.append("text").attr({
-                   id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
-                    x: function() { return d.values.x - 30; },
-                    y: function() { return d.values.y - 15; },
+                d3.select('.main-panel').append("div").attr({
+                   id: "map_tooltip"
                 })
-                .text(function() {
-                  return d.values.airport;  // Value of the text
-                })
-
+                .style("opacity", 0.9)
+                .style('font', '16px sans-serif')
+                .html(d.values.airport)
+                .style("left", (d3.event.clientX) + "px")
+                .style("top", (d3.event.clientY) + "px");
                 
             }
 
             function handleMouseClick(d, i) {
-                if (this.id == "") {
+                if (this.tagName != 'circle' && this.getElementsByClassName('d3-dp-line')[0] == undefined) {
                     var carrier_options = {
                         'AA' : 'American Airlines',
                         'AS' : 'Alaska Airlines',
@@ -643,8 +652,11 @@
                     document.getElementById('active-hubs').innerHTML = 
                             'For ' + carrier_options[cur_carrier] + ' Hubs';
                 }
-                else {
+                else if (this.tagName == 'circle') {
                     selected_airport = this.id;
+                    if (this.id == "") {
+                        selected_airport = d.airport;
+                    }
                     d3.selectAll('.scatterPlotGroup')
                         .selectAll('path')
                         .transition()
@@ -668,8 +680,14 @@
                                 return 'hidden';
                             }
                         })
-                    document.getElementById('active-hubs').innerHTML = 
-                        d.values.airport_name + ' (' + this.id + ')';
+                    if (d.key == undefined) {
+                        document.getElementById('active-hubs').innerHTML = 
+                            d.airport_name + ' (' + selected_airport + ')';
+                    }
+                    else {
+                        document.getElementById('active-hubs').innerHTML = 
+                            d.values.airport_name + ' (' + selected_airport + ')';
+                    }
                 }
             }
 
@@ -697,31 +715,75 @@
                     .attr("x1", dpX1)
                     .attr("y1", dpY1)
                     .attr("x2", dpX1)
-                    .attr("y2", dpY2)
+                    .attr("y2", dpY1)
                     .style("stroke-dasharray", ("5, 3"))
                     .style("stroke-opacity", 0.9)
-                    .style("stroke", 'black');
+                    .style("stroke", 'black')
+                    .transition()
+                    .duration(200)
+                    .ease('linear')
+                    .attr("y2", dpY2);
+                    
 
                 var myLine_y = d3Chart.append("svg:line")
                     .attr("class", 'd3-dp-line')
                     .attr("x1", dpX1)
                     .attr("y1", dpY1)
-                    .attr("x2", dpX2)
+                    .attr("x2", dpX1)
                     .attr("y2", dpY1)
                     .style("stroke-dasharray", ("5, 3"))
                     .style("stroke-opacity", 0.9)
-                    .style("stroke", 'black');
+                    .style("stroke", 'black')
+                    .transition()
+                    .duration(200)
+                    .ease('linear')
+                    .attr("x2", dpX2);
 
+                if (document.getElementsByClassName('btn-link')[1].id == 'arr_flights_sum') {
+                        var tooltip_text = d.x + "\n" + Math.round(d.y)
+                        if (tooltip_text[tooltip_text.length - 4] != '\n') {
+                            tooltip_text = tooltip_text.substring(0, tooltip_text.length - 3) +
+                                           ',' + 
+                                           tooltip_text.substring(tooltip_text.length - 3, tooltip_text.length)
+                       }
+                    }
+                    else {
+                        var tooltip_text = d.x + "\n" + Math.round(d.y*100)/100 + '%'
+                    }
                 this.setAttribute('r', this.getAttribute('r')*1.5)
+                d3.select('.main-panel').append("div").attr({
+                   id: "map_tooltip"
+                })
+                .style("opacity", 0.9)
+                .html(tooltip_text)
+                .style("left", (d3.event.clientX) + "px")
+                .style("top", (d3.event.clientY) + "px");  // Value of the text
                 // debugger;
-                d3Chart.append("text").attr({
-                   id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
-                    x: this.getAttribute('cx') - 30,
-                    y: this.getAttribute('cy') - 15,
-                })
-                .text(function() {
-                  return "(" + d.x + " , " + Math.round(d.y*1000)/1000 + ")";  // Value of the text
-                })
+
+                // Highlight circle on map for selected data point
+                
+                d3.selectAll('.bubble')
+                        .selectAll('circle')
+                        .transition()
+                        .ease('linear')
+                        .duration('250')
+                        .attr('fill-opacity', function(elem) {
+                            // debugger;
+                            if (d.airport == elem.key) {
+                                return 1;
+                            }
+                            else {
+                                return 0.1;
+                            };
+                        })
+                        .attr('stroke-opacity', function(elem) {
+                            if (d.airport == elem.key) {
+                                return 1;
+                            }
+                            else {
+                                return 0.1;
+                            }
+                        });
             }
 
             function handleMouseOutChart(d, i) {
@@ -731,6 +793,15 @@
 
                 // Select text by id and then remove
                 d3.select("#map_tooltip").remove();  // Remove text location
+
+                // Reset circles on map
+                d3.selectAll('.bubble')
+                        .selectAll('circle')
+                        .transition()
+                        .ease('linear')
+                        .duration('250')
+                        .attr('fill-opacity', 1)
+                        .attr('stroke-opacity', 1);
             }
 
             // Creating map
@@ -766,6 +837,14 @@
                               .rollup(function(leaves) {
                                 // debugger;
                                 var coords = leaves.map(function(d) {
+                                    // Modify longitude for plotting on map to avoid JFK/LGA overlap
+                                    if (d.airport == 'JFK') {
+                                        d.long = +d.long + 0.5;
+                                    }
+                                    else if (d.airport == 'LGA') {
+                                        d.long = +d.long - 0.5;
+                                    }
+                                    
                                   return projection([+d.long, +d.lat]);
                                 })
                                 return {
@@ -853,17 +932,18 @@
                         late_aircraft_delay_pct = 0;
                     }
                     else {
-                        arr_del15_pct = arr_del15_sum / arr_flights_sum;
-                        arr_cancelled_pct = arr_cancelled_sum / arr_flights_sum;
-                        carrier_delay_pct = carrier_delay_sum / arr_del15_sum;
-                        weather_delay_pct = weather_delay_sum / arr_del15_sum;
-                        nas_delay_pct =nas_delay_sum / arr_del15_sum;
-                        security_delay_pct = security_delay_sum / arr_del15_sum;
-                        late_aircraft_delay_pct = late_aircraft_delay_sum / arr_del15_sum;
+                        arr_del15_pct = arr_del15_sum / arr_flights_sum * 100;
+                        arr_cancelled_pct = arr_cancelled_sum / arr_flights_sum * 100;
+                        carrier_delay_pct = carrier_delay_sum / arr_del15_sum * 100;
+                        weather_delay_pct = weather_delay_sum / arr_del15_sum * 100;
+                        nas_delay_pct =nas_delay_sum / arr_del15_sum * 100;
+                        security_delay_pct = security_delay_sum / arr_del15_sum * 100;
+                        late_aircraft_delay_pct = late_aircraft_delay_sum / arr_del15_sum * 100;
                     }
 
                     return {
                         'airport' : leaves[0].airport,
+                        'airport_name' : leaves[0].airport_name,
                         'carrier' : leaves[0].carrier,
                         'carrier_name' : leaves[0].carrier_name,
                         'year' : leaves[0].year,
@@ -1011,11 +1091,18 @@
                                     y: l.values[metric],
                                     carrier: l.values['carrier'],
                                     airport: l.values['airport'],
+                                    airport_name: l.values['airport_name'],
                                     metric_name: metric
                                 };
                             })
                         };
                     });
+
+                    if (delay_extent[1] < 100) {
+                        d3.select('.y.axis').selectAll('.tick').select('text').html(function(d) {
+                            return d + '%';
+                        });
+                    }
 
                     d3.select('.chart').selectAll('.scatterPlotGroup').data(data, function(d){return d['key'];}).exit().remove()
                     d3.select('.chart').selectAll('path').data(data, function(d){return d['key'];}).exit().remove()
@@ -1070,7 +1157,8 @@
                         .enter()
                         .append('circle')
                         .on('mouseover', handleMouseOverChart)
-                        .on('mouseout', handleMouseOutChart);
+                        .on('mouseout', handleMouseOutChart)
+                        .on('click', handleMouseClick);
                     
                     circles.transition()
                             .delay(1000)
