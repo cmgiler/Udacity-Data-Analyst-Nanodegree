@@ -1,0 +1,1152 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+	<link rel="icon" type="image/png" href="assets/img/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>Chris Giler - Flight Data Analysis</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+
+
+    <!-- Bootstrap core CSS     -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Animation library for notifications   -->
+    <!-- <link href="assets/css/animate.min.css" rel="stylesheet"/> -->
+
+    <!--  Light Bootstrap Table core CSS    -->
+    <link href="assets/css/light-bootstrap-dashboard.css" rel="stylesheet"/>
+
+
+    <!--  CSS for Demo Purpose, don't include it in your project     -->
+    <!-- <link href="assets/css/demo.css" rel="stylesheet" /> -->
+
+
+    <!--     Fonts and icons     -->
+    <!-- <link href="assets/css/font-awesome.min.css" rel="stylesheet"> -->
+    <!-- <link href='http://fonts.googleapis.com/css?family=Roboto:400,700,300' rel='stylesheet' type='text/css'> -->
+    <!-- <link href="assets/css/pe-icon-7-stroke.css" rel="stylesheet" /> -->
+
+    <style>
+        .bubble circle {
+            stroke: black;
+            stroke-width: 1px;
+        }
+        #map_tooltip span {
+            background-color: white;
+        }
+        .main-panel {
+            background: rgba(0, 0, 0, .1);
+        }
+
+        .y.axis line {
+            fill: none;
+            stroke: black;
+            opacity: .25;
+        }
+
+        .x.axis line {
+            fill: none;
+            stroke: black;
+            opacity: .1;
+        }
+        /*
+        .bubble circle:hover {
+            stroke-width: 2px;
+            cursor: pointer;
+        }*/
+
+    </style>
+    
+</head>
+<body>
+
+<div class="wrapper">
+<!--
+    <div class="sidebar" data-color="purple" data-image="assets/img/sidebar-5.jpg">
+
+    
+
+        Tip 1: you can change the color of the sidebar using: data-color="blue | azure | green | orange | red | purple"
+        Tip 2: you can also add an image using data-image tag
+
+    
+
+    	<div class="sidebar-wrapper">
+            <div class="logo">
+                <a href="http://www.creative-tim.com" class="simple-text">
+                    Creative Tim
+                </a>
+            </div>
+
+            <ul class="nav">
+                <li class="active">
+                    <a href="dashboard.html">
+                        <i class="pe-7s-graph"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="user.html">
+                        <i class="pe-7s-user"></i>
+                        <p>User Profile</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="table.html">
+                        <i class="pe-7s-note2"></i>
+                        <p>Table List</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="typography.html">
+                        <i class="pe-7s-news-paper"></i>
+                        <p>Typography</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="icons.html">
+                        <i class="pe-7s-science"></i>
+                        <p>Icons</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="maps.html">
+                        <i class="pe-7s-map-marker"></i>
+                        <p>Maps</p>
+                    </a>
+                </li>
+                <li>
+                    <a href="notifications.html">
+                        <i class="pe-7s-bell"></i>
+                        <p>Notifications</p>
+                    </a>
+                </li>
+				<li class="active-pro">
+                    <a href="upgrade.html">
+                        <i class="pe-7s-rocket"></i>
+                        <p>Upgrade to PRO</p>
+                    </a>
+                </li>
+            </ul>
+    	</div>
+    </div>
+-->
+
+    <div class="main-panel">
+        
+<!--
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Dashboard</a>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav navbar-left">
+                        <li>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-dashboard"></i>
+                            </a>
+                        </li>
+                        <li class="dropdown">
+                              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-globe"></i>
+                                    <b class="caret"></b>
+                                    <span class="notification">5</span>
+                              </a>
+                              <ul class="dropdown-menu">
+                                <li><a href="#">Notification 1</a></li>
+                                <li><a href="#">Notification 2</a></li>
+                                <li><a href="#">Notification 3</a></li>
+                                <li><a href="#">Notification 4</a></li>
+                                <li><a href="#">Another notification</a></li>
+                              </ul>
+                        </li>
+                        <li>
+                           <a href="">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                           <a href="">
+                               Account
+                            </a>
+                        </li>
+                        <li class="dropdown">
+                              <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    Dropdown
+                                    <b class="caret"></b>
+                              </a>
+                              <ul class="dropdown-menu">
+                                <li><a href="#">Action</a></li>
+                                <li><a href="#">Another action</a></li>
+                                <li><a href="#">Something</a></li>
+                                <li><a href="#">Another action</a></li>
+                                <li><a href="#">Something</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#">Separated link</a></li>
+                              </ul>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Log out
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+-->
+    
+        
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h2 class="title">Analysis of Flight Data in United States</h1>
+                        <h4 class="category" id='active-years'></h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="stats-map">
+
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Airline Hubs (Map)</h4>
+                                <p class="category" id='active-carrier'></p>
+                            </div>
+                            <div class="content">
+                                <div id="plot-map" class="ct-chart"></div>
+
+                                <!-- <div class="footer">
+                                    <div class="legend">
+
+                                        <i class="fa fa-circle text-info"></i> Open
+                                        <i class="fa fa-circle text-danger"></i> Bounce
+                                        <i class="fa fa-circle text-warning"></i> Unsubscribe
+
+                                    </div>
+                                    <hr>
+                                    <!-- <div class="stats-map">
+                                    </div> -->
+                                <!-- </div> -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title" id='active-metric'>Percentage of ---</h4>
+                                <p class="category" id='active-hubs'>By --- Hub</p>
+                            </div>
+                            <div class="content">
+                                <div id="plot-line" class="ct-chart"></div>
+                                <!-- <div class="footer">
+                                    <div class="legend">
+
+                                        <i class="fa fa-circle text-info"></i> Open
+                                        <i class="fa fa-circle text-danger"></i> Click
+                                        <i class="fa fa-circle text-warning"></i> Click Second Time
+
+                                    </div>
+                                    <hr>
+                                    <! <div class="stats-line">
+                                    </div> -->
+                                <!-- </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2">
+                    </div>
+
+                    <div class="col-md-10">
+                        <div class="stats-line"></div>
+                    </div>
+                </div>
+
+                <p></p>
+
+                <div class="row">
+                    <button type="button" class="btn-alert" data-toggle="collapse" data-target="#demo">Descriptions of Flight Delay Causes</button>
+                    <div id="demo" class="collapse">
+                        <p></p>
+                        <ul>
+                            <li><strong>Carrier Delays</strong> - The cause of the cancellation or delay was due to circumstances within the airline's control (e.g. maintenance or crew problems, aircraft cleaning, baggage loading, fueling, etc.).</li>
+                            <li><strong>Late Aircraft Delays</strong> - A previous flight with same aircraft arrived late, causing the present flight to depart late.</li>
+                            <li><strong>NAS Delays</strong> - Delays and cancellations attributable to the national aviation system that refer to a broad set of conditions, such as non-extreme weather conditions, airport operations, heavy traffic volume, and air traffic control.</li>
+                            <li><strong>Security Delays</strong> - Delays or cancellations caused by evacuation of a terminal or concourse, re-boarding of aircraft because of security breach, inoperative screening equipment and/or long lines in excess of 29 minutes at screening areas.</li>
+                            <li><strong>Weather Delays</strong> - Significant meteorological conditions (actual or forecasted) that, in the judgment of the carrier, delays or prevents the operation of a flight such as tornado, blizzard or hurricane.</li>
+                        </ul>
+                        <p>Info taken from <a href="https://www.rita.dot.gov/bts/help/aviation/html/understanding.html">www.rita.do.gov/</a></p>
+                    </div>
+
+                </div>
+
+
+                
+
+<!--
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card ">
+                            <div class="header">
+                                <h4 class="title">2014 Sales</h4>
+                                <p class="category">All products including Taxes</p>
+                            </div>
+                            <div class="content">
+                                <div id="chartActivity" class="ct-chart"></div>
+
+                                <div class="footer">
+                                    <div class="legend">
+                                        <i class="fa fa-circle text-info"></i> Tesla Model S
+                                        <i class="fa fa-circle text-danger"></i> BMW 5 Series
+                                    </div>
+                                    <hr>
+                                    <div class="stats">
+                                        <i class="fa fa-check"></i> Data information certified
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card ">
+                            <div class="header">
+                                <h4 class="title">Tasks</h4>
+                                <p class="category">Backend development</p>
+                            </div>
+                            <div class="content">
+                                <div class="table-full-width">
+                                    <table class="table">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox">
+                                                    </label>
+                                                </td>
+                                                <td>Sign contract for "What are conference organizers afraid of?"</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox" checked="">
+                                                    </label>
+                                                </td>
+                                                <td>Lines From Great Russian Literature? Or E-mails From My Boss?</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox" checked="">
+                                                    </label>
+                                                </td>
+                                                <td>Flooded: One year later, assessing what was lost and what was found when a ravaging rain swept through metro Detroit
+</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox">
+                                                    </label>
+                                                </td>
+                                                <td>Create 4 Invisible User Experiences you Never Knew About</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox">
+                                                    </label>
+                                                </td>
+                                                <td>Read "Following makes Medium better"</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        <input type="checkbox" value="" data-toggle="checkbox">
+                                                    </label>
+                                                </td>
+                                                <td>Unfollow 5 enemies from twitter</td>
+                                                <td class="td-actions text-right">
+                                                    <button type="button" rel="tooltip" title="Edit Task" class="btn btn-info btn-simple btn-xs">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" rel="tooltip" title="Remove" class="btn btn-danger btn-simple btn-xs">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="footer">
+                                    <hr>
+                                    <div class="stats">
+                                        <i class="fa fa-history"></i> Updated 3 minutes ago
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+-->
+            </div>
+        </div>
+
+
+<!--
+        <footer class="footer">
+            <div class="container-fluid">
+                <nav class="pull-left">
+                    <ul>
+                        <li>
+                            <a href="#">
+                                Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Company
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                Portfolio
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                               Blog
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <p class="copyright pull-right">
+                    &copy; 2016 <a href="http://www.creative-tim.com">Creative Tim</a>, made with love for a better web
+                </p>
+            </div>
+        </footer>
+-->
+
+    </div>
+</div>
+
+
+</body>
+
+    <!--   Core JS Files   -->
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
+
+	<!--  Checkbox, Radio & Switch Plugins -->
+	<!-- <script src="assets/js/bootstrap-checkbox-radio-switch.js"></script> -->
+
+	<!--  Charts Plugin -->
+	<!-- <script src="assets/js/chartist.min.js"></script> -->
+
+    <!--  Notifications Plugin    -->
+    <!-- <script src="assets/js/bootstrap-notify.js"></script> -->
+
+    <!-- D3 tooltips -->
+    <!-- <script src="assets/js/d3.tip.v0.6.3.js"></script> -->
+
+    <script type="text/javascript">  
+        Element.prototype.getElementById = function(id) {
+            return document.getElementById(id);
+        }
+
+        function draw(data) {
+            "use_strict";
+            //Initialize Map
+            var map_margin = 0
+    //            width = total_width/2.5 - margin,
+    //            height = 600 - margin;
+            element = document.getElementById('plot-map')
+            var map_width = element.clientWidth
+            var map_height = element.clientHeight
+
+            var svg_map = d3.select('#plot-map')
+                            .append('svg')
+                            .attr('width', map_width)
+                            .attr('height', map_height)
+                            .append('g')
+                            .attr('class', 'map');
+
+            //Initialize Chart
+            var ch_margin = 65
+    //            width = total_width/2.5 - margin,
+    //            height = 600 - margin;
+            ch_element = document.getElementById('plot-line')
+            var ch_width = ch_element.offsetWidth+ch_margin
+            var ch_height = ch_element.offsetHeight-ch_margin/2
+
+    //        d3.select('#plot-line')
+    //          .append('h2')
+    //          .text('Airline Delays: ' + carrier);
+            var svg_chart = d3.select('#plot-line')
+                              .append('svg')
+                              .attr('width', ch_width)
+                              .attr('height', ch_height)
+                              .append('g')
+                              .attr('class','chart');
+
+            var carrier_options = {
+                'AA' : 'American Airlines',
+                'AS' : 'Alaska Airlines',
+                'B6' : 'JetBlue Airways',
+                'DL' : 'Delta Airlines',
+                'F9' : 'Frontier Airlines',
+                'HA' : 'Hawaiian Airlines',
+                'NW' : 'Northwest Airlines',
+                'US' : 'US Airways',
+                'VX' : 'Virgin America',
+                'WN' : 'Southwest Airlines'
+            }
+
+            var metric_options = {
+                'arr_del15_pct' : 'All Flight Delays',
+                'arr_cancelled_pct' : 'Flights Cancelled',
+                'carrier_delay_pct' : 'Carrier Delays',
+                'late_aircraft_delay_pct' : 'Late Aircraft Delays',
+                'nas_delay_pct' : 'NAS Delays',
+                'security_delay_pct' : 'Security Delays',
+                'weather_delay_pct' : 'Weather Delays',
+                'arr_flights_sum' : 'Total Flights'
+            };
+            
+
+            keys = [];
+            for (var k in carrier_options) keys.push(k);
+            var carrier = keys[0];
+            keys = [];
+            for (var k in metric_options) keys.push(k);
+            var metric = keys[0];
+
+
+            // Create Event Handlers for mouse
+            function handleMouseOver(d, i) {  // Add interactivity
+
+                // Use D3 to select element, change color and size
+                d3.select(this).attr({
+                  r: this.getAttribute('r') * 1.2
+                });
+
+                selected_airport = this.id;
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('stroke-opacity', function(d) {
+                        if (d.key != selected_airport) {
+                            return 0.1;
+                        };
+                    })
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('250')
+                    .style('visibility', function(d) {
+                        if (d.airport != selected_airport) {
+                            return 'hidden';
+                        }
+                    })
+
+                // Specify where to put label of text
+                svg_map.append("text").attr({
+                   id: "map_tooltip",  // Create an id for text so we can select it later for removing on mouseout
+                    x: function() { return d.values.x - 30; },
+                    y: function() { return d.values.y - 15; },
+                })
+                .text(function() {
+                  return d.values.airport;  // Value of the text
+                })
+
+                document.getElementById('active-hubs').innerHTML = 
+                        d.values.airport_name + ' (' + this.id + ')';
+            }
+
+            function handleMouseOut(d, i) {
+                // Use D3 to select element, change color back to normal
+                d3.select(this).attr({
+                  r: this.getAttribute('r') / 1.2
+                });
+
+                // Select text by id and then remove
+                d3.select("#map_tooltip").remove();  // Remove text location
+
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('stroke-opacity', function(d) {
+                        return 1;
+                    });
+
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .transition()
+                    .ease('linear')
+                    .duration('500')
+                    .style('visibility', function(d) {
+                        return 'visible';
+                    });
+                
+                document.getElementById('active-hubs').innerHTML = 
+                        'For ' + d.values.carrier_name + ' Hubs';
+            }
+
+            // Creating map
+            var projection = d3.geo.albersUsa()
+                                    .scale(map_width-map_margin)
+                                    .translate([map_width/2-map_margin/2, map_height/2-map_margin/2]);
+            var path = d3.geo.path().projection(projection);
+            var map = svg_map.selectAll('path')
+                          .data(data.features)
+                          .enter()
+                          .append('path')
+                          .attr('d', path)
+                          .style('fill', 'rgb(200,200,170)')
+                          .style('stroke', 'black')
+                          .style('stroke-width', 1);
+
+
+
+            function plot_points_chart(data) {
+
+                //function for aggregating airport names based on airline selection
+              // draw circles logic
+              // Create buttons for carriers and metrics
+
+                var nested_map = d3.nest()
+                              .key(function(d) {
+                                return d['carrier'];
+                              })
+                              .key(function(d) {
+                                return d['airport'];
+                              })
+                              .rollup(function(leaves) {
+                                // debugger;
+                                var coords = leaves.map(function(d) {
+                                  return projection([+d.long, +d.lat]);
+                                })
+                                return {
+                                  'airport' : leaves[0].airport,
+                                  'airport_name' : leaves[0].airport_name,
+                                  'carrier_name' : leaves[0].carrier_name,
+                                  'x' : coords[0][0],
+                                  'y' : coords[0][1]
+                                };
+
+                              })
+                              .entries(data);
+
+                function update_map(carrier) {
+                    var carriers = d3.set();
+                    for (var i = 0; i < nested_map.length; i++) {
+                        carriers.add(nested_map[i].key);
+                      // break
+                    }
+                    carriers = carriers.values()
+                    var nested_filt = nested_map.filter(function(d) { return d['key'] === carrier})[0];
+
+                    document.getElementById('active-carrier').innerHTML = 
+                                'For ' + nested_filt.values[0].values.carrier_name + ' Hubs';
+
+                    var color = d3.scale.category10()
+
+                    svg_map.selectAll('circle').data(data, function(d) {return d['key'];}).exit().remove();
+                    var circles = svg_map.selectAll('circle').data(nested_filt.values, function(d) {return d['key'];})
+                    // circles.exit().remove();
+
+                    svg_map.append('g')
+                      .attr('class','bubble')
+                      .selectAll('circle')
+                      .data(nested_filt.values)
+                      .enter()
+                      .append('circle')
+                      .attr('cx', function(d) { return d.values['x']; })
+                      .attr('cy', function(d) { return d.values['y']; })
+                      .attr('id', function(d) { return d.key;})
+                      .attr('fill', function(d, i) { return color(d.key); })
+                      .attr('r', 7)
+                      .on('mouseover', handleMouseOver)
+                      .on('mouseout', handleMouseOut)
+                };    
+
+                
+
+                //Plotting for charts
+                
+                function agg_year(leaves) {
+                    var arr_flights_sum = d3.sum(leaves, function(d) {
+                        return d['arr_flights'];
+                    });
+                    var arr_del15_sum = d3.sum(leaves, function(d) {
+                        return d['arr_del15'];
+                    });
+                    var arr_cancelled_sum = d3.sum(leaves, function(d) {
+                        return d['arr_cancelled'];
+                    });
+                    var carrier_delay_sum = d3.sum(leaves, function(d) {
+                        return d['carrier_ct'];
+                    });
+                    var weather_delay_sum = d3.sum(leaves, function(d) {
+                        return d[' weather_ct'];
+                    });
+                    var nas_delay_sum = d3.sum(leaves, function(d) {
+                        return d['nas_ct'];
+                    });
+                    var security_delay_sum = d3.sum(leaves, function(d) {
+                        return d['security_ct'];
+                    });
+                    var late_aircraft_delay_sum = d3.sum(leaves, function(d) {
+                        return d['late_aircraft_ct'];
+                    });
+
+                    if (arr_flights_sum == 0) {
+                        arr_del15_pct = 0;
+                        arr_cancelled_pct = 0;
+                        carrier_delay_pct = 0;
+                        weather_delay_pct = 0;
+                        nas_delay_pct =0;
+                        security_delay_pct = 0;
+                        late_aircraft_delay_pct = 0;
+                    }
+                    else {
+                        arr_del15_pct = arr_del15_sum / arr_flights_sum;
+                        arr_cancelled_pct = arr_cancelled_sum / arr_flights_sum;
+                        carrier_delay_pct = carrier_delay_sum / arr_del15_sum;
+                        weather_delay_pct = weather_delay_sum / arr_del15_sum;
+                        nas_delay_pct =nas_delay_sum / arr_del15_sum;
+                        security_delay_pct = security_delay_sum / arr_del15_sum;
+                        late_aircraft_delay_pct = late_aircraft_delay_sum / arr_del15_sum;
+                    }
+
+                    return {
+                        'airport' : leaves[0].airport,
+                        'carrier' : leaves[0].carrier,
+                        'carrier_name' : leaves[0].carrier_name,
+                        'year' : leaves[0].year,
+                        'arr_flights_sum' : arr_flights_sum,
+                        'arr_del15_sum' : arr_del15_sum,
+                        'arr_del15_pct' : arr_del15_pct,
+                        'arr_cancelled_sum' : arr_cancelled_sum,
+                        'arr_cancelled_pct' : arr_cancelled_pct,
+                        'carrier_delay_sum' : carrier_delay_sum,
+                        'carrier_delay_pct' : carrier_delay_pct,
+                        'weather_delay_sum' : weather_delay_sum,
+                        'weather_delay_pct' : weather_delay_pct,
+                        'nas_delay_sum' : nas_delay_sum,
+                        'nas_delay_pct' : nas_delay_pct,
+                        'security_delay_sum' : security_delay_sum,
+                        'security_delay_pct' : security_delay_pct,
+                        'late_aircraft_delay_sum' : late_aircraft_delay_sum,
+                        'late_aircraft_delay_pct' : late_aircraft_delay_pct
+                    };
+                }
+                // debugger;
+
+                function initAxis() {
+                    var x1 = new Date("2003").getFullYear()+1;
+                    var x2 = new Date("2003").getFullYear()+1;
+                    var x = d3.time.scale()
+                                        .range([ch_margin, ch_width-ch_margin])
+                                        .domain([x1, x2]),
+                        y = d3.scale.linear()
+                                        .range([ch_height-ch_margin, ch_margin])
+                                        .domain([0,1]),
+                        xAxis = d3.svg.axis().scale(x).orient('bottom').tickFormat(d3.time.format('%Y')),
+                        yAxis = d3.svg.axis().scale(y).orient('left');
+
+                    d3.select('.chart')
+                      .append('g')
+                      .attr('class', 'x axis')
+                      .attr('transform', 'translate(0,' + (ch_height-ch_margin) + ')')
+                      .call(xAxis);
+
+                    d3.select('.chart')
+                      .append('g')
+                      .attr('class', 'y axis')
+                      .attr('transform', 'translate(' + ch_margin + ',0)')
+                      .call(yAxis);
+
+                    d3.select('.chart').append('text').attr('text-anchor', 'middle')
+                                      .attr('transform', 'translate(' + (ch_width/2) + ',' + (ch_height) + ')')
+                                      .text('YEAR')
+                }
+                initAxis();
+
+                function update_chart(carrier, metric) {
+                    
+                    var metric_options = {
+                        'arr_del15_pct' : 'All Flight Delays',
+                        'arr_cancelled_pct' : 'Flights Cancelled',
+                        'carrier_delay_pct' : 'Carrier Delays',
+                        'late_aircraft_delay_pct' : 'Late Aircraft Delays',
+                        'nas_delay_pct' : 'NAS Delays',
+                        'security_delay_pct' : 'Security Delays',
+                        'weather_delay_pct' : 'Weather Delays',
+                        'arr_flights_sum' : 'Total Flights'
+                    };
+
+                    var nested_chart = d3.nest()
+                                .key(function(d) {
+                                    return d['carrier'];
+                                })
+                                .key(function(d) {
+                                    return d['airport'];
+                                })
+                                .key(function(d) {
+                                    return d['year'];
+                                })
+                                .rollup(agg_year)
+                                .entries(data);
+
+                    nested_filt = nested_chart.filter(function(d) {
+                        return d['key'] == carrier;
+                    })[0]
+
+                    var all_x = []
+                    var all_y = []
+                    nested_filt.values.forEach(function(item) {
+                        item.values.forEach(function(item2) {
+                            all_x = all_x.concat(item2.key);
+                            all_y = all_y.concat(item2.values[metric])
+                        });
+                    });
+
+                    var time_extent = d3.extent(all_x)
+                    time_extent[0] = new Date(time_extent[0]).getFullYear()+1;
+                    time_extent[1] = new Date(time_extent[1]).getFullYear()+1;
+
+                    var time_scale = d3.time.scale()
+                                            .range([ch_margin, ch_width-ch_margin])
+                                            .domain(time_extent);
+
+                    // var time_axis = d3.svg.axis()
+                    //                   .scale(time_scale)
+                    //                   .ticks(d3.time.years, 1)
+                    //                   .tickFormat(d3.time.format('%Y'));
+                    var time_axis = d3.svg.axis()
+                                          .scale(time_scale)
+                                          .orient('bottom')
+                                          .ticks(time_extent[1]-time_extent[0]+1)
+                                          .innerTickSize(-(ch_height-2*ch_margin))
+                                          .outerTickSize(0)
+                                          .tickPadding(5)
+                                          .tickFormat(d3.format('04d'));
+                    
+                    var delay_extent = d3.extent(all_y)
+                    delay_extent[0] = 0;
+                    delay_extent[1] = delay_extent[1]*1.1;
+
+                    var delay_scale = d3.scale.linear()
+                                        .range([ch_height-ch_margin, ch_margin])
+                                        .domain(delay_extent);
+
+                    var delay_axis = d3.svg.axis()
+                                       .scale(delay_scale)
+                                       .orient('left')
+                                       .ticks(6)
+                                       .innerTickSize(-(ch_width-2*ch_margin))
+                                       .outerTickSize(5)
+                                       .tickPadding(15);
+
+                    // d3.select('.chart').selectAll('g.x.axis').call(time_axis);
+                    d3.select('.chart').transition().duration(1000).selectAll('g.x.axis').call(time_axis);
+                    d3.select('.chart').selectAll('.x.axis text').attr('transform', function(d) {
+                        return 'translate(' + this.getBBox().height*-1 + ',' + this.getBBox().height  + ')rotate(-30)';
+                    });
+
+                    d3.select('.chart').transition().duration(1500).selectAll('g.y.axis').call(delay_axis);
+
+                    data_plot = nested_filt.values.map(function(d) {
+                        return {
+                            key: d.key,
+                            points: d.values.map(function(l, i) {
+                                return {
+                                    x: l.key,
+                                    y: l.values[metric],
+                                    carrier: l.values['carrier'],
+                                    airport: l.values['airport'],
+                                    metric_name: metric
+                                };
+                            })
+                        };
+                    });
+
+                    d3.select('.chart').selectAll('.scatterPlotGroup').data(data, function(d){return d['key'];}).exit().remove()
+                    d3.select('.chart').selectAll('path').data(data, function(d){return d['key'];}).exit().remove()
+                    
+                    // Draw Circles
+                    var circleGroups = d3.select('.chart').selectAll('.scatterPlotGroup')
+                                         .data(data_plot)
+                                         .enter()
+                                         .append('g')
+                                         .attr('class', 'scatterPlotGroup')
+                                         .attr('id', function(d) {
+                                            return d.key;
+                                         });
+                    
+                    var circles = circleGroups.selectAll('circle')
+                      .data(function(d) {
+                        return d.points;
+                      })
+                      .enter()
+                      .append('circle');
+                    
+                    circles.transition()
+                            .delay(1000)
+                            .ease('linear')
+                            .duration(500)
+                            .attr('cx', function(d) {
+                                return time_scale(d['x']);
+                            })
+                            .attr('cy', function(d) {
+                                return delay_scale(d['y']);
+                            })
+                            .attr('fill',function(d, i) {
+                                var airport_cur = d['airport'];
+                                // debugger;
+                                return document.getElementById('plot-map')
+                                                .getElementById(airport_cur)
+                                                .getAttribute('fill')
+                            })
+                            .attr('r',5);
+
+                    // Draw lines to connect circles
+                    var valueline = d3.svg.line()
+                        .x(function(d) {
+                            return time_scale(d['x']);
+                        })
+                        .y(function(d) {
+                            return delay_scale(d['y']);
+                        });
+
+                    path = d3.select('.chart').selectAll('.scatterPlotGroup')
+                        .data(data_plot)
+                        .append('path')
+                        .attr('class', 'line')
+                        .attr('d', valueline)
+                        .attr('d', function(d) {return valueline(d.points);})
+                        .style('fill','none')
+                        .style('stroke', function(d) {
+                            return document.getElementById('plot-map')
+                                            .getElementById(d.key)
+                                            .getAttribute('fill');
+                        })
+                        .style('stroke-width','3px');
+
+                    
+
+                    path.attr('stroke-dasharray', function(d, i) {
+                            return path[0][i].getTotalLength() + " " + path[0][i].getTotalLength();
+                        })
+                        .attr('stroke-dashoffset', function(d, i) {
+                            return path[0][i].getTotalLength();
+                        })
+                        .transition()
+                        .duration(1000)
+                        .ease('linear')
+                        .attr('stroke-dashoffset', 0);
+
+                    
+                    document.getElementById('active-years').innerHTML = 
+                            'Years ' + time_extent[0] + ' to ' + time_extent[1];
+                    
+                    if (metric == "arr_del15_pct") {
+                        chart_title = "Flights Delayed (Percentage of All Scheduled Arrivals)";
+                    }
+                    else if (metric == "arr_cancelled_pct") {
+                        chart_title = "Flights Cancelled (Percentage of All Scheduled Arrivals)"
+                    }
+                    else if (metric == "arr_flights_sum") {
+                        chart_title = "Total Number of Scheduled Arrivals (By Year)";
+                    }
+                    else {
+                        chart_title = metric_options[metric] + " (Percentage of All Flight Delays)";
+                    }
+                    document.getElementById('active-metric').innerHTML = 
+                            chart_title;
+                    document.getElementById('active-hubs').innerHTML = 
+                            'For ' + nested_filt.values[0].values[0].values.carrier_name + ' Hubs';
+                }
+
+                carrier_data = [];
+                for (var key in carrier_options) {
+                    carrier_data.push(key);
+                }
+                var carrier_buttons = d3.select('.stats-map')
+                                        .append('div')
+                                        .attr('class', 'carrier_buttons')
+                                        .selectAll('div')
+                                        .data(carrier_data)
+                                        .enter()
+                                        .append('button')
+                                        .attr('class', function(d, i) {
+                                            if (i === 0)
+                                                return 'btn-link btn-block';
+                                            else
+                                                return 'btn-primary btn-block';
+                                        })
+                                        .attr('id', function(d) {
+                                            return d;
+                                        })
+                                        .text(function(d, i) {
+                                            return d;
+                                        });
+
+                for (var i = 0; i < carrier_buttons[0].length; i++) {
+                    carrier_buttons[0][i].innerHTML = carrier_options[carrier_buttons[0][i].id];
+                }
+
+                // Initialize Buttons
+
+
+                carrier_buttons.on('click', function(d) {
+                    d3.select('.carrier_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', false)
+                        .classed('btn-primary', true);
+                    d3.select(this)
+                        .classed('btn-link', true);
+                    update_map(d);
+                    cur_metric = document.getElementsByClassName('btn-link')[1].id;
+                    update_chart(d, cur_metric);
+                })
+
+                metric_data = [];
+                for (var key in metric_options) {
+                    metric_data.push(key);
+                }
+                
+                var metric_buttons = d3.select('.stats-line')
+                                .append('div')
+                                .attr('class', 'metric_buttons')
+                                .selectAll('div')
+                                .data(metric_data)
+                                .enter()
+                                .append('button')
+                                .attr('class', function(d, i) {
+                                    if (i == 0)
+                                        return 'btn-link';
+                                    else
+                                        return 'btn-primary';
+                                })
+                                .attr('id', function(d) {
+                                    return d;
+                                })
+                                .text(function(d, i) {
+                                    return d;
+                                });
+
+                
+                for (var i = 0; i < metric_buttons[0].length; i++) {
+                    // debugger;
+                    metric_buttons[0][i].innerHTML = metric_options[metric_buttons[0][i].id];
+                }
+
+
+                metric_buttons.on('click', function(d) {
+                    d3.select('.metric_buttons')
+                        .selectAll('button')
+                        // .transition()
+                        // .duration(500)
+                        .classed('btn-link', false)
+                        .classed('btn-primary', true);
+                    d3.select(this)
+                        .classed('btn-link', true);
+                    cur_carrier = document.getElementsByClassName('btn-link')[0].id;
+                    update_chart(cur_carrier, d);
+                })
+
+                
+                update_map(carrier);
+                update_chart(carrier,metric);
+                
+                
+               
+
+                // <button class="btn-link">All Flight Delays</button>
+              }
+
+              d3.csv('airline_delay_loc.csv', plot_points_chart);
+
+
+      };
+
+    </script>
+    
+    <script type="text/javascript">
+        d3.json('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA.geo.json', draw);
+    </script>
+    
+</html>
