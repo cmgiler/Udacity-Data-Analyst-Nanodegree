@@ -49,16 +49,24 @@ Some improvements were needed to make the charts more easily readable to the use
 ----------
 
 
-### Version 4 (Final): D3.js
+### Version 4: D3.js
 
 Changes to the previous version were primarily made to further improve interactivity for the viewer. Tooltips were added to the chart with animated droplines to allow the viewer to see the actual value at a given point by hovering over it. The chart was updated to allow the viewer to click directly on a data point to highlight the data for that airport. A slight adjustment was also made to the coordinates of JFK and LGA airports, to avoid an issue with geo-points overlapping on the map. Finally, data given as fractions were converted to percentages to make it more apparent to the viewer what it is that the metric represents.
 
 [View visualization on bl.ocks.org/](https://bl.ocks.org/cmgiler/raw/a171d27a841c040a7fc323fbf02fa332/)
 
-![Final D3 Visualization](https://i.imgur.com/RjMEHXn.png)
+![First Submission of D3 Visualization](https://i.imgur.com/RjMEHXn.png)
 
 
 ----------
+
+### Version 5 (Final): D3.js
+
+The first submission of the visualization was modified based on feedback from the course project review. The main issue identified by the feedback was that the submission must include an author-driven narrative at the start of the visualization. To meet this requirement, the visualization was modified to load a case study when the page is loaded. This case study walks the viewer through an analysis of the 2008 - 2010 merger between Delta and Northwest Airlines. The visualization allows the viewer to stay engaged during the walkthrough by giving a somewhat more selective amount of interactivity, and the final page suggests two other mergers that can be explored further by the viewer. The chart was also modified to line up the x-axis labels with their corresponding gridlines, as mentioned in the project review.
+
+[View final visualization on bl.ocks.org/](https://bl.ocks.org/cmgiler/raw/9b4a2aee527cfba789d51f7dee0523c4/)
+
+![Second Submission of D3 Visualization](https://i.imgur.com/pVZtJQq.png)
 
 
 ## Feedback
@@ -99,6 +107,32 @@ Changes to the previous version were primarily made to further improve interacti
 
 
 ----------
+
+### Feedback for Version 4 (index\_3.html)
+
+> You've done a fabulous job analysing your dataset and focussing on a specific, clear story in the data. The problem is that the rubric asks specifically for an explanatory visualisation and at the moment yours is an excellent example of an exploratory one. All you need to do is use your exploratory visualisation to come to some conclusions. Some suggestions for starter questions:
+
+> - Were there more/less delays at certain airports? in certain years? for certain airlines? 
+> - Have you seen an improvement or decline over time? 
+> - Do some airlines perform better than others?
+
+> This clearly doesn't have to be a comprehensive answer that gives an insight into ALL your chart combinations but an introduction to the reader telling them your story and then giving them the freedom to explore your graphic and find their own - do you remember the martini glass example?
+
+> A text box somewhere on the page outlining your story would do the trick.
+
+> If you feel additional text will clutter your beautiful layout you could also add a splash page or overlay as a first step to your visualisation?
+
+>Your design choices are truly fantastic. Things I love:
+
+> - a Bootstrap layout for extra polish
+> - the interactivity between the three elements - buttons, map and line chart
+> - Colour coding is looking great
+> - All labels are clear and accessible
+> - the way you've thought carefully about the layout as a whole - button and chart placement, titles, changing subheadings
+
+>Overall a really professional job.
+
+> There is one problem which requires changing - your lines are not lining up with your x_axis. You either need to alter the scale or use a transform to make sure they are both inline.
 
 
 ## Resources

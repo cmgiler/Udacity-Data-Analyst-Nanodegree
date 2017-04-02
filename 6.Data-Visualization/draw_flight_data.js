@@ -6,7 +6,7 @@ Element.prototype.getElementById = function(id) {
 // Main drawing function (draws both map and chart)
 function draw(data) {
     "use_strict";
-
+    
     //Initialize Map (based on current window height and width)
     var map_margin = 0
     element = document.getElementById('plot-map')
@@ -23,8 +23,8 @@ function draw(data) {
     //Initialize Chart (also based on current window height and width)
     var ch_margin = 65
     ch_element = document.getElementById('plot-line')
-    var ch_width = ch_element.offsetWidth+ch_margin
-    var ch_height = ch_element.offsetHeight-ch_margin/2
+    var ch_width = ch_element.offsetWidth+ch_margin/1.2
+    var ch_height = ch_element.offsetHeight-ch_margin
 
     var svg_chart = d3.select('#plot-line')
                       .append('svg')
@@ -126,7 +126,7 @@ function draw(data) {
             
             var cur_carrier = document.getElementsByClassName('btn-link')[0].id;
             document.getElementById('active-hubs').innerHTML = 
-                    'For ' + carrier_options[cur_carrier] + ' Hubs';
+                    document.getElementById('active-carrier').innerHTML;
         }
         // If circle is selected, highlight corresponding path line in chart
         else if (this.tagName == 'circle') {
@@ -334,7 +334,7 @@ function draw(data) {
                       })
                       .entries(data);
 
-        function update_map(carrier) {
+        function update_map(carrier, airports) {
             // Draw circles for selected carrier on map
             var carriers = d3.set();
             for (var i = 0; i < nested_map.length; i++) {
@@ -470,7 +470,7 @@ function draw(data) {
             };
         }
 
-        function update_chart(carrier, metric) {
+        function update_chart(carrier, metric, airports) {
             // Draw circles and paths for selected carrier and metric on map
             var metric_options = {
                 'arr_del15_pct' : 'All Flight Delays',
@@ -548,7 +548,8 @@ function draw(data) {
 
             // Rotate time axis labels
             d3.select('.chart').selectAll('.x.axis text').attr('transform', function(d) {
-                return 'translate(' + this.getBBox().height*-1 + ',' + this.getBBox().height  + ')rotate(-30)';
+                // debugger;
+                return 'translate(' + (this.getBBox().height*-1 + 10) + ',' + (this.getBBox().height-5)  + ')rotate(-30)';
             });
 
             // Map values from filtered nested data
@@ -673,9 +674,34 @@ function draw(data) {
             document.getElementById('active-metric').innerHTML = 
                     chart_title;
 
+
             // Update chart sub-title
             document.getElementById('active-hubs').innerHTML = 
                     'For ' + nested_filt.values[0].values[0].values.carrier_name + ' Hubs';
+
+            if (airports != undefined && airports[0] != undefined) {
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('path')
+                    .style('stroke-opacity', function(d) {
+                        if (!airports.includes(d.key)) {
+                            return 0.05;
+                        }
+                        else {
+                            return 0.95;
+                        };
+                    })
+                d3.selectAll('.scatterPlotGroup')
+                    .selectAll('circle')
+                    .style('visibility', function(d) {
+                        if (!airports.includes(d.airport)) {
+                            return 'hidden';
+                        }
+                        else {
+                            return 'visible';
+                        }
+                    })
+            }
+
         }
 
         // Change button classes to show selected carrier and metric
@@ -700,6 +726,7 @@ function draw(data) {
                                 .attr('id', function(d) {
                                     return d;
                                 })
+                                .style('display', 'none')
                                 .text(function(d, i) {
                                     return d;
                                 });
@@ -708,8 +735,6 @@ function draw(data) {
             carrier_buttons[0][i].innerHTML = carrier_options[carrier_buttons[0][i].id];
         }
 
-
-        // Initialize Buttons
         carrier_buttons.on('click', function(d) {
             d3.select('.carrier_buttons')
                 .selectAll('button')
@@ -745,6 +770,7 @@ function draw(data) {
                         .attr('id', function(d) {
                             return d;
                         })
+                        .style('display','none')
                         .text(function(d, i) {
                             return d;
                         });
@@ -760,12 +786,103 @@ function draw(data) {
                 .classed('btn-primary', true);
             d3.select(this)
                 .classed('btn-link', true);
-            cur_carrier = document.getElementsByClassName('btn-link')[0].id;
+            var cur_carrier = document.getElementsByClassName('btn-link')[0].id;
             update_chart(cur_carrier, d);
         })
 
-        update_map(carrier);
-        update_chart(carrier,metric);
+        
+        // Show case study for Delta/Northwest Merger to start
+        var pagination = d3.select('.pagination')
+                           .selectAll('li a')
+                           .on('click', function(d, i) {
+                                var story_name = this.parentElement.parentElement.classList[0];
+                                var page = this.id;
+                                var page_num = i;
+                                if (page == 'page-end') {
+                                    // Go to free exploration
+                                    d3.select('#story-container').remove()
+                                    document.getElementById('active-years').innerHTML = 'Explore the Data!'
+                                    // update_map('AA')
+                                    // update_chart('AA','arr_del15_pct')
+                                    d3.select('.metric_buttons')
+                                      .selectAll('button')
+                                      .style('display', 'initial')
+                                    d3.select('.carrier_buttons')
+                                      .selectAll('button')
+                                      .style('display', 'initial')
+                                }
+                                else if (story_name == 'delta_northwest_merger') {
+                                    // Page 1: Show Northwest Data (arr_flights_sum for NW)
+                                    if (i == 0) {
+                                        document.getElementById('NW').click()
+                                        document.getElementById('arr_flights_sum').click()
+                                        update_map('NW')
+                                        update_chart('NW', 'arr_flights_sum', ['MSP','DTW','MEM'])
+                                        document.getElementById('active-years').innerHTML = 
+                                            'Case Study: The Delta / Northwest Airlines Merger'
+                                        document.getElementById('story-description').innerHTML = 
+                                            'On April 15, 2008, a merger agreement was announced between Northwest \
+                                            and Delta Airlines. Operating certificates were merged between the two airlines \
+                                            by the end of 2009, and in 2010 Northwest ceased to exist as an independent carrier.'
+                                    }
+                                    else if (i == 1) {
+                                        document.getElementById('DL').click()
+                                        update_map('DL')
+                                        update_chart('DL', 'arr_flights_sum', ['MSP','DTW','MEM'])
+                                        document.getElementById('active-years').innerHTML = 
+                                            'Case Study: The Delta / Northwest Airlines Merger'
+                                        document.getElementById('story-description').innerHTML = 
+                                            "In 2010, as a result of the merger, Delta airlines acquired new hubs in Detroit, MI (DTW), \
+                                            Minneapolis, MN (MSP), and Memphis, TN (MEM). Minneapolis and Detroit are now Delta's second \
+                                            and third largest hubs by total flights, respectively, and Detroit also serves as Delta's Asian gateway \
+                                            for the northeastern United States. Hub status for Memphis was removed in 2013 after several rounds of budget cuts."
+                                    }
+                                    else if (i == 2) {
+                                        document.getElementById('DL').click()
+                                        document.getElementById('carrier_delay_pct').click()
+                                        update_map('DL')
+                                        update_chart('DL', 'carrier_delay_pct', ['MSP', 'DTW', 'MEM'])
+                                        document.getElementById('active-years').innerHTML = 
+                                            'Case Study: The Delta / Northwest Airlines Merger'
+                                        document.getElementById('story-description').innerHTML = 
+                                            "The same year that the merger was put into action (2010), there was a spike in the percentage \
+                                            of flight delays that were a result of circumstances within the airline's control. \
+                                            This jump was observed for MSP and MEM, as well as other hubs that were not formerly hubs for Northwest. \
+                                            However, this trend was not observed for DTW, which showed an improvement in this metric."
+                                    }
+                                    else if (i == 3) {
+                                        document.getElementById('DL').click()
+                                        document.getElementById('late_aircraft_delay_pct').click()
+                                        update_map('DL')
+                                        update_chart('DL', 'late_aircraft_delay_pct', ['MSP','DTW', 'MEM'])
+                                        document.getElementById('active-years').innerHTML = 
+                                            'Case Study: The Delta / Northwest Airlines Merger'
+                                        document.getElementById('story-description').innerHTML = 
+                                            "There was a similar increase in delays that were attributed to aircraft operating behind schedule over \
+                                            multiple consecutive flights. This trend was observed at all three former Northwest hubs, but were most \
+                                            apparent for MSP and DTW flight arrivals."
+                                    }
+                                    else if (i == 4) {
+                                        document.getElementById('US').click()
+                                        document.getElementById('arr_flights_sum').click()
+                                        document.getElementById('active-years').innerHTML = 
+                                            'Additional Exploration (American/US Airways & Frontier/Midwest Airlines Mergers'
+                                        document.getElementById('story-description').innerHTML = 
+                                            "This visualization shows flight delay data for 10 major US airlines at their hub airports. There are \
+                                            two other mergers that can be explored further in this dataset. US Airways (shown) merged with \
+                                            American Airlines by the end of 2015. Frontier Airlines merged with Midwest Airlines (not included) \
+                                            by late 2011, resulting in Frontier beginning operation in CLE, CVG, and ORD in 2012."
+                                    }
+                                    // Page 2: Show Delta Acquisition for Northwest Hubs (arr_flights_sum for DL at NW hubs)
+                                    // Page 3: Show Carrier Delays for Northwest Hubs (carrier_delay_pct for DL at NW hubs)
+                                    // Page 4: Show Late Aircraft Delays for Northwest Hubs (late_aircraft_delay_pct for DL at NW hubs)
+                                }
+
+                           })
+        
+        // Initialize Story
+        document.getElementById('page-1').click()
+        
     };
 
     d3.csv('airline_delay_loc.csv', plot_points_chart);

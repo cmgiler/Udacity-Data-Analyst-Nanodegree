@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+	<link rel="icon" type="image/png" href="assets/img/favicon.ico">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>Chris Giler - Flight Data Analysis</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+
+
+    <!-- Bootstrap core CSS     -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!--  Light Bootstrap Table core CSS    -->
+    <link href="light-bootstrap-dashboard.css" rel="stylesheet"/>
+
+    <!-- Custom CSS for Visualization -->
+    <link href="visualization.css" rel="stylesheet"/>
+    
+</head>
+<body>
+
+<div class="wrapper">
+
+    <div class="main-panel">        
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <h2 class="title">Analysis of Flight Data in United States</h1>
+                        <h4 class="category" id='active-years'></h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="stats-map">
+
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title">Airline Hubs (Map)</h4>
+                                <p class="category" id='active-carrier'></p>
+                            </div>
+                            <div class="content">
+                                <div id="plot-map" class="ct-chart"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="header">
+                                <h4 class="title" id='active-metric'>Percentage of ---</h4>
+                                <p class="category" id='active-hubs'>By --- Hub</p>
+                            </div>
+                            <div class="content">
+                                <div id="plot-line" class="ct-chart"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2">
+                    </div>
+
+                    <div class="col-md-10">
+                        <div class="stats-line"></div>
+                    </div>
+                </div>
+
+                <p></p>
+
+                <div class="row">
+                    <button type="button" class="btn-alert" data-toggle="collapse" data-target="#demo">Descriptions of Flight Delay Causes</button>
+                    <div id="demo" class="collapse">
+                        <p></p>
+                        <ul>
+                            <li><strong>Carrier Delays</strong> - The cause of the cancellation or delay was due to circumstances within the airline's control (e.g. maintenance or crew problems, aircraft cleaning, baggage loading, fueling, etc.).</li>
+                            <li><strong>Late Aircraft Delays</strong> - A previous flight with same aircraft arrived late, causing the present flight to depart late.</li>
+                            <li><strong>NAS Delays</strong> - Delays and cancellations attributable to the national aviation system that refer to a broad set of conditions, such as non-extreme weather conditions, airport operations, heavy traffic volume, and air traffic control.</li>
+                            <li><strong>Security Delays</strong> - Delays or cancellations caused by evacuation of a terminal or concourse, re-boarding of aircraft because of security breach, inoperative screening equipment and/or long lines in excess of 29 minutes at screening areas.</li>
+                            <li><strong>Weather Delays</strong> - Significant meteorological conditions (actual or forecasted) that, in the judgment of the carrier, delays or prevents the operation of a flight such as tornado, blizzard or hurricane.</li>
+                        </ul>
+                        <p>Info taken from <a href="https://www.rita.dot.gov/bts/help/aviation/html/understanding.html">www.rita.do.gov/</a></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container-fluid">
+                <p class="copyright pull-right">
+                    Created by <a href="https://github.com/cmgiler/Udacity-Data-Analyst-Nanodegree/tree/master/6.Data-Visualization/">Christopher Giler</a> on March 28, 2017<br>
+                    In fulfillment of Udacity Data Analyst Nanodegree Project #6<br>
+                    Webpage template from: &copy;2017 <a href="http://www.creative-tim.com">Creative Tim</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+</div>
+
+
+</body>
+
+    <!--   Core JS Files (for Bootstrap)   -->
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
+
+    <!-- JS File for D3 Visualization -->
+    <!-- Data is contained in file "airline_delay_loc.csv" -->
+    <script src="draw_flight_data.js" type="text/javascript"></script>
+    
+    <!-- Run visualization for map and chart -->
+    <script type="text/javascript">
+        d3.json('https://raw.githubusercontent.com/johan/world.geo.json/master/countries/USA.geo.json', draw);
+    </script>
+    
+</html>
