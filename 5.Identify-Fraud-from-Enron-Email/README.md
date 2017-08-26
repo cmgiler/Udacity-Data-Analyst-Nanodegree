@@ -6,7 +6,8 @@ Christopher Giler
 
 January 26, 2017
 
-[Report Feedback Available Here.](https://github.com/cmgiler/Udacity-Data-Analyst-Nanodegree/blob/master/5.Identify-Fraud-from-Enron-Email/Udacity_P5_Project_Feedback.pdf)
+[Project Feedback Available Here.](https://github.com/cmgiler/Udacity-Data-Analyst-Nanodegree/blob/master/5.Identify-Fraud-from-Enron-Email/Udacity_P5_Project_Feedback.pdf)
+
 ---
 
 ## Introduction
