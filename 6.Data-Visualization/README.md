@@ -2,6 +2,8 @@
 
 Flight delays have long been a common occurrence in the commercial air travel industry, affecting hundreds of thousands of US passengers daily. However, while many have felt the frustration that often follows from a late departure, the variety of incidents that can contribute to a delayed flight are less widely known. Since 2003, the US Department of Transportation's Bureau of Transportation Statistics (DOT-BTS) has tracked the on-time performance of domestic flights operated by major airlines, and continues to make this data available to the public on a monthly basis. This visualization illustrates how flight delays have changed over time for major carriers at their airport hubs, and also gives some insight into the different factors which influence these delays.
 
+[Project Feedback Available Here.](https://github.com/cmgiler/Udacity-Data-Analyst-Nanodegree/blob/master/6.Data-Visualization/Udacity_P6_Project_Feedback.pdf)
+
 ----------
 
 
