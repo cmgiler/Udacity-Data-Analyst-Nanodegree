@@ -10,6 +10,8 @@
 
 This report explores a dataset which quantifies the chemical properties and quality ratings of 4,898 white wines. The goal of this exploratory data analysis is to determine which of these properties has the most influence on white wine quality.
 
+[Project Feedback Available Here.](https://github.com/cmgiler/Udacity-Data-Analyst-Nanodegree/blob/master/4.Explore-and-Summarize-Data/Udacity_P4_Project_Feedback.pdf)
+
 # Univariate Plots Section
 
 ### Data Properties
